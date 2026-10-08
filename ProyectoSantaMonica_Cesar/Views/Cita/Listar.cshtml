@@ -4,12 +4,14 @@
 @{
     ViewData["Title"] = "Listado de Citas";
 
-    bool verTodas = ViewBag.VerTodas != null
-        && (bool)ViewBag.VerTodas;
+
+bool verTodas = ViewBag.VerTodas != null &&
+        (bool)ViewBag.VerTodas;
 
     string? texto = ViewBag.Texto as string;
 
     bool hayBusqueda = !string.IsNullOrWhiteSpace(texto);
+
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -20,112 +22,77 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
 <div class="container mt-4">
 
-    <div class="card shadow-sm rounded-4">
+    <div class="card shadow-sm rounded-4 border-0">
 
-        <!-- ================================================= -->
         <!-- ENCABEZADO -->
-        <!-- ================================================= -->
 
-        <div class="card-header bg-primary text-white
-                    d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary text-white rounded-top-4
+                d-flex justify-content-between align-items-center">
 
             <h5 class="mb-0">
                 <i class="bi bi-calendar-check me-2"></i>
                 Listado de Citas
             </h5>
 
-            @if (hayBusqueda)
-            {
-                    <span class="badge bg-light text-primary">
-                        <i class="bi bi-search me-1"></i>
-                        Resultados de búsqueda
-                    </span>
-            }
-            else if (verTodas)
-            {
-                    <span class="badge bg-light text-primary">
-                        <i class="bi bi-calendar3 me-1"></i>
-                        Todas las citas
-                    </span>
-            }
-            else
-            {
-                    <span class="badge bg-light text-primary">
-                        <i class="bi bi-calendar-check me-1"></i>
-                        Citas pendientes
-                    </span>
-            }
+            <span class="badge bg-light text-primary">
+                @(verTodas || hayBusqueda ? "Todas las citas" : "Pendientes")
+            </span>
 
         </div>
 
 
         <div class="card-body">
 
-            <!-- ================================================= -->
-            <!-- BOTONES SUPERIORES -->
-            <!-- ================================================= -->
+            <!-- BOTONES -->
 
             <div class="d-flex justify-content-between
-                        align-items-center mb-3">
-
-                <!-- REGISTRAR -->
+                    align-items-center mb-3">
 
                 <a asp-action="Registrar"
                    class="btn btn-success">
 
                     <i class="bi bi-plus-circle me-1"></i>
-                    Registrar
+                    Registrar cita
 
                 </a>
 
-
-                <!-- VER MÁS / VER PENDIENTES -->
 
                 @if (!hayBusqueda)
                 {
                     @if (!verTodas)
                     {
-                                <a asp-action="Listar"
-                                   asp-route-verTodas="true"
-                                   class="btn btn-outline-primary">
+                        <a asp-action="Listar"
+                           asp-route-verTodas="true"
+                           class="btn btn-outline-primary">
 
-                                    <i class="bi bi-list-ul me-1"></i>
-                                    Ver más
+                            <i class="bi bi-list-ul me-1"></i>
+                            Ver todas
 
-                                </a>
+                        </a>
                     }
                     else
                     {
-                                <a asp-action="Listar"
-                                   asp-route-verTodas="false"
-                                   class="btn btn-outline-secondary">
+                        <a asp-action="Listar"
+                           asp-route-verTodas="false"
+                           class="btn btn-outline-secondary">
 
-                                    <i class="bi bi-arrow-left me-1"></i>
-                                    Ver pendientes
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Ver pendientes
 
-                                </a>
+                        </a>
                     }
                 }
 
             </div>
 
 
-            <!-- ================================================= -->
-            <!-- BUSCAR PACIENTE -->
-            <!-- ================================================= -->
+            <!-- BÚSQUEDA -->
 
             <form asp-action="Listar"
                   method="get"
-                  class="mb-3">
-
-                <!--
-                    No es necesario enviar verTodas cuando hay una búsqueda,
-                    pero lo conservamos para mantener el comportamiento
-                    normal de la pantalla.
-                -->
+                  class="mb-4">
 
                 <input type="hidden"
                        name="verTodas"
@@ -137,26 +104,25 @@
                            name="texto"
                            class="form-control"
                            value="@texto"
-                           placeholder="Buscar paciente por nombre o apellido..." />
+                           placeholder="Buscar paciente, DNI, médico, fecha o motivo..." />
 
                     <button type="submit"
                             class="btn btn-primary">
 
-                        <i class="bi bi-search"></i>
+                        <i class="bi bi-search me-1"></i>
                         Buscar
 
                     </button>
 
                     @if (hayBusqueda)
                     {
-                            <a asp-action="Listar"
-                               class="btn btn-outline-secondary"
-                               title="Limpiar búsqueda">
+                        <a asp-action="Listar"
+                           class="btn btn-outline-secondary">
 
-                                <i class="bi bi-x-circle me-1"></i>
-                                Limpiar
+                            <i class="bi bi-x-circle me-1"></i>
+                            Limpiar
 
-                            </a>
+                        </a>
                     }
 
                 </div>
@@ -164,93 +130,12 @@
             </form>
 
 
-            <!-- ================================================= -->
-            <!-- INFORMACIÓN / REGLA FUNCIONAL -->
-            <!-- ================================================= -->
-
-            <div class="alert alert-light border mb-3">
-
-                @if (hayBusqueda)
-                {
-                        <div>
-
-                            <i class="bi bi-search text-primary me-1"></i>
-
-                            Mostrando
-                            <strong>todas las citas</strong>
-                            que coinciden con el paciente:
-
-                            <strong class="text-primary">
-                                "@texto"
-                            </strong>.
-
-                            <div class="small text-muted mt-1">
-
-                                La búsqueda incluye citas
-                                <strong>
-                                    pendientes, pagadas, atendidas,
-                                    canceladas y vencidas
-                                </strong>.
-
-                                Las citas pendientes aparecen primero.
-
-                            </div>
-
-                        </div>
-                }
-                else if (!verTodas)
-                {
-                        <div>
-
-                            <i class="bi bi-info-circle text-primary me-1"></i>
-
-                            Mostrando únicamente las
-                            <strong>citas pendientes</strong>.
-
-                            <div class="small text-muted mt-1">
-
-                                Las citas desactivadas y atendidas
-                                se conservan en el historial.
-
-                                Utilice la búsqueda para consultar
-                                el historial completo de un paciente.
-
-                            </div>
-
-                        </div>
-                }
-                else
-                {
-                        <div>
-
-                            <i class="bi bi-clock-history text-primary me-1"></i>
-
-                            Mostrando
-                            <strong>todas las citas</strong>.
-
-                            <div class="small text-muted mt-1">
-
-                                Las citas pendientes aparecen primero.
-                                Las demás se ordenan por fecha y hora.
-
-                            </div>
-
-                        </div>
-                }
-
-            </div>
-
-
-            <!-- ================================================= -->
             <!-- TABLA -->
-            <!-- ================================================= -->
 
             <div class="table-responsive">
 
-                <table class="table table-hover
-                              table-bordered
-                              text-center
-                              align-middle">
+                <table class="table table-hover table-bordered
+                          text-center align-middle mb-0">
 
                     <thead class="table-light">
 
@@ -268,7 +153,7 @@
 
                             <th>Estado</th>
 
-                            <th style="width:190px;">
+                            <th style="width: 170px;">
                                 Acciones
                             </th>
 
@@ -283,236 +168,210 @@
                         {
                             foreach (var cita in Model)
                             {
-                                        <tr>
+                                string badge = cita.Estado switch
+                                {
+                                    EstadoCita.PAGADO =>
+                                    "bg-success",
 
-                                            <!-- ================================= -->
-                                            <!-- PACIENTE -->
-                                            <!-- ================================= -->
+                                    EstadoCita.PENDIENTE =>
+                                    "bg-warning text-dark",
 
-                                            <td>
+                                    EstadoCita.CANCELADO =>
+                                    "bg-danger",
 
-                                        @(cita.Paciente != null
-                                                ? $"{cita.Paciente.Nombres} {cita.Paciente.Apellidos}"
-                                                : "Sin datos")
+                                    EstadoCita.VENCIDO =>
+                                    "bg-secondary",
 
-                                            </td>
+                                    EstadoCita.ATENDIDO =>
+                                    "bg-info text-dark",
 
+                                    _ =>
+                                    "bg-dark"
+                                };
 
-                                            <!-- ================================= -->
-                                            <!-- MÉDICO -->
-                                            <!-- ================================= -->
 
-                                            <td>
-
-                                        @(cita.Medico != null
-                                                ? $"{cita.Medico.Nombres} {cita.Medico.Apellidos}"
-                                                : "Sin datos")
-
-                                            </td>
-
-
-                                            <!-- ================================= -->
-                                            <!-- FECHA -->
-                                            <!-- ================================= -->
-
-                                            <td>
-
-                                        @cita.Fecha.ToString("dd/MM/yyyy")
-
-                                            </td>
-
-
-                                            <!-- ================================= -->
-                                            <!-- HORA -->
-                                            <!-- ================================= -->
-
-                                            <td>
-
-                                                <span class="fw-semibold">
-
-                                            @cita.Hora.ToString(@"hh\:mm")
-
-                                                </span>
-
-                                            </td>
-
-
-                                            <!-- ================================= -->
-                                            <!-- MOTIVO -->
-                                            <!-- ================================= -->
-
-                                            <td>
-
-                                        @(string.IsNullOrWhiteSpace(cita.Motivo)
-                                                ? "-"
-                                                : cita.Motivo)
-
-                                            </td>
-
-
-                                            <!-- ================================= -->
-                                            <!-- ESTADO -->
-                                            <!-- ================================= -->
-
-                                            <td>
-
-                                        @{
-
-                                            string badge = cita.Estado switch
-                                            {
-                                                EstadoCita.PAGADO =>
-                                                    "bg-success",
-
-                                                EstadoCita.PENDIENTE =>
-                                                    "bg-warning text-dark",
-
-                                                EstadoCita.CANCELADO =>
-                                                    "bg-danger",
-
-                                                EstadoCita.VENCIDO =>
-                                                    "bg-secondary",
-
-                                                EstadoCita.ATENDIDO =>
-                                                    "bg-info",
-
-                                                _ =>
-                                                    "bg-dark"
-                                            };
-
-                                        }
-
-                                                <span class="badge @badge">
-
-                                            @cita.Estado
-
-                                                </span>
-
-                                            </td>
-
-
-                                            <!-- ================================= -->
-                                            <!-- ACCIONES -->
-                                            <!-- ================================= -->
-
-                                            <td>
-
-                                                <!-- DETALLE -->
-
-                                                <a asp-action="Detalle"
-                                                   asp-route-id="@cita.Id_Cita"
-                                                   class="btn btn-warning btn-sm"
-                                                   title="Ver detalle">
-
-                                                    <i class="bi bi-eye"></i>
-
-                                                </a>
-
-
-                                                <!-- EDITAR -->
-
-                                        @if (cita.Estado == EstadoCita.PENDIENTE ||
-                                            cita.Estado == EstadoCita.PAGADO)
-                                        {
-                                                        <a asp-action="Editar"
-                                                           asp-route-id="@cita.Id_Cita"
-                                                           class="btn btn-primary btn-sm"
-                                                           title="Editar">
-
-                                                            <i class="bi bi-pencil"></i>
-
-                                                        </a>
-                                        }
-                                        else
-                                        {
-                                                        <button type="button"
-                                                                class="btn btn-secondary btn-sm"
-                                                                disabled
-                                                                title="No disponible">
-
-                                                            <i class="bi bi-pencil"></i>
-
-                                                        </button>
-                                        }
-
-
-                                                <!-- DESACTIVAR -->
-
-                                        @if (cita.Estado == EstadoCita.PENDIENTE)
-                                        {
-                                                        <button type="button"
-                                                                class="btn btn-danger btn-sm"
-                                                                title="Desactivar"
-                                                                onclick="confirmarDesactivar(@cita.Id_Cita)">
-
-                                                            <i class="bi bi-slash-circle"></i>
-
-                                                        </button>
-                                        }
-                                        else
-                                        {
-                                                        <button type="button"
-                                                                class="btn btn-secondary btn-sm"
-                                                                disabled
-                                                                title="No disponible">
-
-                                                            <i class="bi bi-slash-circle"></i>
-
-                                                        </button>
-                                        }
-
-                                            </td>
-
-                                        </tr>
-                            }
-                        }
-                        else
-                        {
                                 <tr>
 
-                                    <td colspan="7"
-                                        class="text-muted py-4">
+                                    <!-- PACIENTE -->
 
-                                    @if (hayBusqueda)
-                                    {
-                                                <div>
+                                    <td>
 
-                                                    <i class="bi bi-search
-                                                      fs-3 d-block mb-2"></i>
+                                        @if (cita.Paciente != null)
+                                        {
+                                            <span class="fw-semibold">
+                                                @cita.Paciente.Nombres
+                                                @(" ")
+                                                @cita.Paciente.Apellidos
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                Sin datos
+                                            </span>
+                                        }
 
-                                                    No se encontraron citas para el paciente
+                                    </td>
 
-                                                    <strong>
-                                                        "@texto"
-                                                    </strong>.
 
-                                                </div>
-                                    }
-                                    else if (!verTodas)
-                                    {
-                                                <div>
+                                    <!-- MÉDICO -->
 
-                                                    <i class="bi bi-calendar-check
-                                                      fs-3 d-block mb-2"></i>
+                                    <td>
 
-                                                    No hay citas pendientes.
+                                        @if (cita.Medico != null)
+                                        {
+                                            <span class="fw-semibold">
+                                                @cita.Medico.Nombres
+                                                @(" ")
+                                                @cita.Medico.Apellidos
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                Sin datos
+                                            </span>
+                                        }
 
-                                                </div>
-                                    }
-                                    else
-                                    {
-                                                <div>
+                                    </td>
 
-                                                    <i class="bi bi-calendar-x
-                                                      fs-3 d-block mb-2"></i>
 
-                                                    No se encontraron citas.
+                                    <!-- FECHA -->
 
-                                                </div>
-                                    }
+                                    <td>
+                                        @cita.Fecha.ToString("dd/MM/yyyy")
+                                    </td>
+
+
+                                    <!-- HORA -->
+
+                                    <td>
+
+                                        <span class="fw-semibold">
+                                            @cita.Hora.ToString(@"hh\:mm")
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- MOTIVO -->
+
+                                    <td>
+
+                                        @if (string.IsNullOrWhiteSpace(cita.Motivo))
+                                        {
+                                            <span class="text-muted">
+                                                -
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            @cita.Motivo
+                                        }
+
+                                    </td>
+
+
+                                    <!-- ESTADO -->
+
+                                    <td>
+
+                                        <span class="badge @badge px-3 py-2">
+                                            @cita.Estado
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- ACCIONES -->
+
+                                    <td>
+
+                                        <!-- DETALLE -->
+
+                                        <a asp-action="Detalle"
+                                           asp-route-id="@cita.Id_Cita"
+                                           class="btn btn-warning btn-sm"
+                                           title="Ver detalle">
+
+                                            <i class="bi bi-eye"></i>
+
+                                        </a>
+
+
+                                        <!-- EDITAR -->
+                                        @if (cita.Estado == EstadoCita.PENDIENTE)
+                                        {
+                                            <a asp-action="Editar"
+                                               asp-route-id="@cita.Id_Cita"
+                                               class="btn btn-primary btn-sm"
+                                               title="Editar">
+
+                                                <i class="bi bi-pencil"></i>
+
+                                            </a>
+                                        }
+
+
+                                        <!-- CANCELAR -->
+                                        @if (cita.Estado == EstadoCita.PENDIENTE)
+                                        {
+                                            <form asp-action="Cancelar"
+                                                  asp-route-id="@cita.Id_Cita"
+                                                  method="post"
+                                                  class="d-inline"
+                                                  id="formCancelar-@cita.Id_Cita">
+
+                                                @Html.AntiForgeryToken()
+
+                                                <button type="button"
+                                                        class="btn btn-danger btn-sm"
+                                                        title="Cancelar cita"
+                                                        onclick="confirmarCancelar(@cita.Id_Cita)">
+
+                                                    <i class="bi bi-x-circle"></i>
+
+                                                </button>
+
+                                            </form>
+                                        }
 
                                     </td>
 
                                 </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+
+                                <td colspan="7"
+                                    class="text-muted py-5">
+
+                                    <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+
+                                    @if (hayBusqueda)
+                                    {
+                                        <span>
+                                            No se encontraron citas.
+                                        </span>
+                                    }
+                                    else if (!verTodas)
+                                    {
+                                        <span>
+                                            No hay citas pendientes.
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            No hay citas registradas.
+                                        </span>
+                                    }
+
+                                </td>
+
+                            </tr>
                         }
 
                     </tbody>
@@ -524,29 +383,27 @@
         </div>
 
     </div>
+    ```
 
 </div>
 
-
-<!-- ========================================================= -->
-<!-- SWEETALERT -->
-<!-- ========================================================= -->
+<!-- CONFIRMAR CANCELACIÓN -->
 
 <script>
 
-    function confirmarDesactivar(id) {
+    function confirmarCancelar(id) {
 
         Swal.fire({
 
-            title: "¿Desactivar cita?",
+            title: "¿Cancelar cita?",
 
-            text: "La cita no será eliminada. Se conservará en el historial como CANCELADA.",
+            text: "La cita quedará registrada como cancelada.",
 
             icon: "warning",
 
             showCancelButton: true,
 
-            confirmButtonText: "Sí, desactivar",
+            confirmButtonText: "Sí, cancelar",
 
             cancelButtonText: "No",
 
@@ -556,9 +413,14 @@
 
             if (result.isConfirmed) {
 
-                window.location.href =
-                    '@Url.Action("Desactivar", "Cita")' +
-                    '?id=' + id;
+                const formulario =
+                    document.getElementById("formCancelar-" + id);
+
+                if (formulario) {
+
+                    formulario.submit();
+
+                }
 
             }
 
@@ -568,46 +430,47 @@
 
 </script>
 
-
-<!-- ========================================================= -->
-<!-- MENSAJES -->
-<!-- ========================================================= -->
-
+<!-- MENSAJE DE ÉXITO -->
 @if (TempData["Success"] != null)
 {
-        <script>
+     <script>
 
-            Swal.fire({
+              Swal.fire({
 
-                icon: 'success',
+                  icon: 'success',
 
-                title: 'Correcto',
+                  title: 'Correcto',
 
-                text: '@TempData["Success"]',
+                  text: '@TempData["Success"]',
 
-                confirmButtonText: 'Aceptar'
+                  confirmButtonText: 'Aceptar'
 
-            });
+              });
 
-        </script>
+    </script>
+
+
 }
 
-
+<!-- MENSAJE DE ERROR -->
 @if (TempData["Error"] != null)
 {
-        <script>
+     <script>
 
-            Swal.fire({
+          ```
+              Swal.fire({
 
-                icon: 'error',
+                  icon: 'error',
 
-                title: 'Error',
+                  title: 'Error',
 
-                text: '@TempData["Error"]',
+                  text: '@TempData["Error"]',
 
-                confirmButtonText: 'Aceptar'
+                  confirmButtonText: 'Aceptar'
 
-            });
+              });
 
-        </script>
+    </script>
+
+
 }

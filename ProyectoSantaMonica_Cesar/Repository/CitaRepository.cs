@@ -121,19 +121,27 @@ namespace ProyectoSantaMonica_Cesar.Repository
         }
 
         // =========================================================
-        // BUSCAR POR PACIENTE
+        // BUSCAR GENERAL
         // =========================================================
 
-        public async Task<List<Cita>> BuscarPorPacienteAsync(string texto)
+        public async Task<List<Cita>> BuscarAsync(
+    string texto)
         {
             var lista = new List<Cita>();
 
             using var cn = new SqlConnection(_connection);
-            using var cmd = new SqlCommand("sp_buscarCitasPaciente", cn);
+
+            using var cmd = new SqlCommand(
+                "sp_buscarCitasPaciente",
+                cn);
 
             cmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.Parameters.AddWithValue("@Texto", texto);
+            cmd.Parameters.Add(
+                "@Texto",
+                SqlDbType.VarChar,
+                100
+            ).Value = texto;
 
             await cn.OpenAsync();
 
@@ -158,9 +166,9 @@ namespace ProyectoSantaMonica_Cesar.Repository
         // =========================================================
 
         public async Task<bool> MedicoAtiendeEnHorarioAsync(
-            int idMedico,
-            DateTime fecha,
-            TimeSpan hora)
+    int idMedico,
+    DateTime fecha,
+    TimeSpan hora)
         {
             fecha = fecha.Date;
 
@@ -169,17 +177,21 @@ namespace ProyectoSantaMonica_Cesar.Repository
                 return false;
             }
 
-            // Utilizamos el mismo helper utilizado por el Controller
-            // para obtener el día de la semana del proyecto.
+            // Obtener el día de la semana correspondiente a la fecha.
             var diaSemana = DIaSemanaHelper.FromDateTime(fecha);
 
+            // CORRECCIÓN:
+            // La tabla utilizada por el proyecto se llama HorariosAtencion,
+            // según el DbSet definido en ApplicationDbContext.
+            //
+            // Dia_Semana se almacena como texto mediante HasConversion<string>().
             const string sql = @"
-                SELECT COUNT(*)
-                FROM Horario
-                WHERE Id_Medico = @Id_Medico
-                  AND Dia_Semana = @Dia_Semana
-                  AND @Hora >= Horario_Entrada
-                  AND @Hora < Horario_Salida;";
+        SELECT COUNT(*)
+        FROM Horarios_Atencion
+        WHERE Id_Medico = @Id_Medico
+          AND Dia_Semana = @Dia_Semana
+          AND @Hora >= Horario_Entrada
+          AND @Hora < Horario_Salida;";
 
             using var cn = new SqlConnection(_connection);
             using var cmd = new SqlCommand(sql, cn);
@@ -188,9 +200,11 @@ namespace ProyectoSantaMonica_Cesar.Repository
                 "@Id_Medico",
                 idMedico);
 
+            // CORRECCIÓN:
+            // Enviar el nombre del día como texto, no como número.
             cmd.Parameters.AddWithValue(
                 "@Dia_Semana",
-                Convert.ToInt32(diaSemana));
+                diaSemana.ToString());
 
             cmd.Parameters.AddWithValue(
                 "@Hora",
@@ -203,6 +217,8 @@ namespace ProyectoSantaMonica_Cesar.Repository
 
             return resultado > 0;
         }
+
+
 
         // =========================================================
         // VALIDAR HORARIO DE CITA

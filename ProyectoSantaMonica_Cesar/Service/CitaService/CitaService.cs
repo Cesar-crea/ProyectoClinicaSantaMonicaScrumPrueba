@@ -28,9 +28,9 @@ namespace ProyectoSantaMonica_Cesar.Service.CitaService
         // BUSCAR POR PACIENTE
         // =========================================================
 
-        public async Task<List<Cita>> BuscarPorPacienteAsync(
-            string texto)
-            => await _repo.BuscarPorPacienteAsync(texto);
+        public async Task<List<Cita>> BuscarAsync(
+     string texto)
+     => await _repo.BuscarAsync(texto);
 
         // =========================================================
         // REGISTRAR

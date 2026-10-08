@@ -11,8 +11,7 @@ namespace ProyectoSantaMonica_Cesar.Service.CitaService
 
         Task<List<Cita>> ListarAsync();
 
-        Task<List<Cita>> BuscarPorPacienteAsync(
-            string texto);
+        Task<List<Cita>> BuscarAsync(string texto);
 
         Task<string> RegistrarAsync(
             Cita cita);

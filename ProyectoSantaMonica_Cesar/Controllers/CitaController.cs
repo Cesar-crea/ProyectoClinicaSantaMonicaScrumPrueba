@@ -40,7 +40,6 @@ namespace ProyectoSantaMonica_Cesar.Controllers
         // ==========================================================
         // LISTAR CITAS
         // ==========================================================
-
         [HttpGet]
         public async Task<IActionResult> Listar(
             string? texto,
@@ -48,60 +47,17 @@ namespace ProyectoSantaMonica_Cesar.Controllers
         {
             try
             {
-                List<Cita> lista;
-
                 await _service.ActualizarEstadosAutomaticosAsync();
 
                 texto = texto?.Trim();
 
-
-                // ==================================================
-                // CON BÚSQUEDA
-                // ==================================================
+                List<Cita> lista;
 
                 if (!string.IsNullOrWhiteSpace(texto))
                 {
-                    var todas =
-                        await _service.ListarAsync();
-
                     lista =
-                        todas
-                            .Where(c =>
-                                c.Paciente != null &&
-                                (
-                                    c.Paciente.Nombres.Contains(
-                                        texto,
-                                        StringComparison.OrdinalIgnoreCase)
-
-                                    ||
-
-                                    c.Paciente.Apellidos.Contains(
-                                        texto,
-                                        StringComparison.OrdinalIgnoreCase)
-
-                                    ||
-
-                                    $"{c.Paciente.Nombres} {c.Paciente.Apellidos}"
-                                        .Contains(
-                                            texto,
-                                            StringComparison.OrdinalIgnoreCase)
-                                )
-                            )
-                            .OrderBy(c =>
-                                c.Estado == EstadoCita.PENDIENTE
-                                    ? 0
-                                    : 1)
-                            .ThenBy(c => c.Fecha)
-                            .ThenBy(c => c.Hora)
-                            .ToList();
+                        await _service.BuscarAsync(texto);
                 }
-
-
-                // ==================================================
-                // SIN BÚSQUEDA
-                // SOLO PENDIENTES
-                // ==================================================
-
                 else if (!verTodas)
                 {
                     lista =
@@ -114,12 +70,6 @@ namespace ProyectoSantaMonica_Cesar.Controllers
                             .ThenBy(c => c.Hora)
                             .ToList();
                 }
-
-
-                // ==================================================
-                // VER TODAS
-                // ==================================================
-
                 else
                 {
                     lista =
@@ -136,7 +86,6 @@ namespace ProyectoSantaMonica_Cesar.Controllers
                             .ToList();
                 }
 
-
                 ViewBag.Texto = texto;
                 ViewBag.VerTodas = verTodas;
 
@@ -145,7 +94,7 @@ namespace ProyectoSantaMonica_Cesar.Controllers
             catch (Exception ex)
             {
                 TempData["Error"] =
-                    ex.Message;
+                    "No se pudo cargar el listado de citas.";
 
                 ViewBag.Texto = texto;
                 ViewBag.VerTodas = verTodas;
@@ -667,8 +616,8 @@ namespace ProyectoSantaMonica_Cesar.Controllers
             );
         }
 
-
-        // ==========================================================
+        /*
+         *  // ==========================================================
         // DESACTIVAR
         // ==========================================================
 
@@ -738,6 +687,9 @@ namespace ProyectoSantaMonica_Cesar.Controllers
             );
         }
 
+         
+         */
+
 
         // ==========================================================
         // DETALLE
@@ -779,7 +731,8 @@ namespace ProyectoSantaMonica_Cesar.Controllers
         // ==========================================================
         // CANCELAR
         // ==========================================================
-
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancelar(int id)
         {
             try
@@ -787,62 +740,50 @@ namespace ProyectoSantaMonica_Cesar.Controllers
                 var cita =
                     await _service.ObtenerPorIdAsync(id);
 
-
                 if (cita == null)
                 {
                     TempData["Error"] =
-                        "Cita no encontrada";
+                        "Cita no encontrada.";
 
-                    return RedirectToAction(
-                        nameof(Listar)
-                    );
+                    return RedirectToAction(nameof(Listar));
                 }
-
 
                 if (cita.Estado != EstadoCita.PENDIENTE)
                 {
                     TempData["Error"] =
-                        "Solo se pueden cancelar citas pendientes";
+                        "Solo se pueden cancelar citas pendientes.";
 
-                    return RedirectToAction(
-                        nameof(Listar)
-                    );
+                    return RedirectToAction(nameof(Listar));
                 }
-
 
                 var msg =
                     await _service.ActualizarEstadoAsync(
                         id,
-                        EstadoCita.CANCELADO
+                        EstadoCita.CANCELADO);
+
+                if (msg == "OK")
+                {
+                    TempData["Success"] =
+                        "Cita cancelada correctamente.";
+
+                    await LogAsync(
+                        "CANCELAR",
+                        "CITAS",
+                        $"Cita #{id} cancelada"
                     );
-
-
-                TempData[
-                    msg == "OK"
-                        ? "Success"
-                        : "Error"
-                ] =
-                    msg == "OK"
-                        ? "Cita cancelada correctamente"
-                        : msg;
+                }
+                else
+                {
+                    TempData["Error"] = msg;
+                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 TempData["Error"] =
-                    ex.Message;
+                    "No se pudo cancelar la cita.";
             }
 
-
-            await LogAsync(
-                "CANCELAR",
-                "CITAS",
-                $"Cita #{id} cancelada"
-            );
-
-
-            return RedirectToAction(
-                nameof(Listar)
-            );
+            return RedirectToAction(nameof(Listar));
         }
 
 
@@ -1010,123 +951,51 @@ namespace ProyectoSantaMonica_Cesar.Controllers
 
         [HttpGet]
         public async Task<JsonResult> Buscar(
-            string texto)
+     string texto)
         {
+            texto = texto?.Trim();
+
             List<Cita> lista;
-
-
-            texto =
-                texto?.Trim();
-
-
-            // ==================================================
-            // SIN TEXTO
-            // ==================================================
 
             if (string.IsNullOrWhiteSpace(texto))
             {
                 lista =
                     await _service.ListarPorEstadoAsync(
-                        EstadoCita.PENDIENTE
-                    );
-
-
-                lista =
-                    lista
-                        .OrderBy(c => c.Fecha)
-                        .ThenBy(c => c.Hora)
-                        .ToList();
+                        EstadoCita.PENDIENTE);
             }
-
-
-            // ==================================================
-            // CON TEXTO
-            // ==================================================
-
             else
             {
-                var todas =
-                    await _service.ListarAsync();
-
-
                 lista =
-                    todas
-                        .Where(c =>
-                            c.Paciente != null &&
-                            (
-                                c.Paciente.Nombres.Contains(
-                                    texto,
-                                    StringComparison.OrdinalIgnoreCase)
-
-                                ||
-
-                                c.Paciente.Apellidos.Contains(
-                                    texto,
-                                    StringComparison.OrdinalIgnoreCase)
-
-                                ||
-
-                                $"{c.Paciente.Nombres} {c.Paciente.Apellidos}"
-                                    .Contains(
-                                        texto,
-                                        StringComparison.OrdinalIgnoreCase)
-                            )
-                        )
-                        .OrderBy(c =>
-                            c.Estado == EstadoCita.PENDIENTE
-                                ? 0
-                                : 1)
-                        .ThenBy(c => c.Fecha)
-                        .ThenBy(c => c.Hora)
-                        .ToList();
+                    await _service.BuscarAsync(texto);
             }
-
-
-            // ==================================================
-            // JSON
-            // ==================================================
 
             var resultado =
                 lista.Select(c => new
                 {
-                    idCita =
-                        c.Id_Cita,
+                    idCita = c.Id_Cita,
 
-                    fecha =
-                        c.Fecha.ToString(
-                            "dd/MM/yyyy"
-                        ),
+                    fecha = c.Fecha.ToString(
+                        "dd/MM/yyyy"),
 
-                    hora =
-                        c.Hora,
+                    hora = c.Hora.ToString(
+                        @"hh\:mm"),
 
-                    motivo =
-                        c.Motivo,
+                    motivo = c.Motivo,
 
-                    estado =
-                        c.Estado.ToString(),
+                    estado = c.Estado.ToString(),
 
                     pacienteNombre =
-                        c.Paciente != null
-                            ? c.Paciente.Nombres
-                            : "",
+                        c.Paciente?.Nombres ?? "",
 
                     pacienteApellido =
-                        c.Paciente != null
-                            ? c.Paciente.Apellidos
-                            : "",
+                        c.Paciente?.Apellidos ?? "",
 
                     medicoNombre =
-                        c.Medico != null
-                            ? c.Medico.Nombres
-                            : "",
+                        c.Medico?.Nombres ?? "",
 
                     medicoApellido =
-                        c.Medico != null
-                            ? c.Medico.Apellidos
-                            : ""
+                        c.Medico?.Apellidos ?? ""
                 });
-
 
             return Json(resultado);
         }
@@ -1173,30 +1042,26 @@ namespace ProyectoSantaMonica_Cesar.Controllers
         // ==========================================================
 
         [HttpGet]
-        public async Task<IActionResult> Editar(
-            int id)
+        public async Task<IActionResult> Editar(int id)
         {
-            var cita =
-                await _service.ObtenerPorIdAsync(id);
-
+            var cita = await _service.ObtenerPorIdAsync(id);
 
             if (cita == null)
             {
-                return NotFound();
+                TempData["Error"] = "La cita no existe.";
+                return RedirectToAction(nameof(Listar));
             }
 
+            if (cita.Estado != EstadoCita.PENDIENTE)
+            {
+                TempData["Error"] =
+                    "Solo se pueden editar citas pendientes.";
 
-            // ==================================================
-            // DATOS PARA MODALES
-            // ==================================================
+                return RedirectToAction(nameof(Listar));
+            }
 
-            ViewBag.Pacientes =
-                _pacienteservice.ListarTodosPaciente();
-
-
-            ViewBag.Medicos =
-                await _medicoservice.ListarTodosAsync();
-
+            // Aquí conserva el resto de tu código actual
+            // para cargar pacientes, médicos, horarios, etc.
 
             return View(cita);
         }
@@ -1205,14 +1070,37 @@ namespace ProyectoSantaMonica_Cesar.Controllers
         // ==========================================================
         // EDITAR - POST
         // ==========================================================
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Editar(
-            Cita c)
+    
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Editar(Cita c)
         {
             try
             {
+                // ==================================================
+                // VALIDAR QUE LA CITA EXISTA Y SIGA PENDIENTE
+                // ==================================================
+
+                var citaActual =
+                    await _service.ObtenerPorIdAsync(c.Id_Cita);
+
+                if (citaActual == null)
+                {
+                    TempData["Error"] =
+                        "La cita no existe.";
+
+                    return RedirectToAction(nameof(Listar));
+                }
+
+                if (citaActual.Estado != EstadoCita.PENDIENTE)
+                {
+                    TempData["Error"] =
+                        "Solo se pueden modificar citas pendientes.";
+
+                    return RedirectToAction(nameof(Listar));
+                }
+
+
                 // ==================================================
                 // NORMALIZAR FECHA
                 // ==================================================
@@ -1291,7 +1179,6 @@ namespace ProyectoSantaMonica_Cesar.Controllers
                         _pacienteservice
                             .ListarTodosPaciente();
 
-
                     ViewBag.Medicos =
                         await _medicoservice
                             .ListarTodosAsync();
@@ -1329,7 +1216,7 @@ namespace ProyectoSantaMonica_Cesar.Controllers
             catch (Exception ex)
             {
                 TempData["Error"] =
-                    ex.Message;
+                    "No se pudo actualizar la cita.";
 
 
                 // ==================================================
@@ -1364,7 +1251,6 @@ namespace ProyectoSantaMonica_Cesar.Controllers
                     _pacienteservice
                         .ListarTodosPaciente();
 
-
                 ViewBag.Medicos =
                     await _medicoservice
                         .ListarTodosAsync();
@@ -1376,6 +1262,8 @@ namespace ProyectoSantaMonica_Cesar.Controllers
             }
         }
 
+
+   
 
         // ==========================================================
         // AUDITORIA
