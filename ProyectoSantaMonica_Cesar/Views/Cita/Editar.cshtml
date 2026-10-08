@@ -6,17 +6,34 @@
 
 <title>Editar Cita</title>
 
-<!-- Bootstrap e íconos -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- ==========================================================
+     ICONOS Y FUENTES
+     Bootstrap ya es cargado por _LayoutRecepcionista
+     ========================================================== -->
+
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet">
+
 
 <style>
+
+    /* ==========================================================
+           GENERAL
+           ========================================================== */
+
     body {
         background-color: #f4f7fb;
         font-family: 'Poppins', sans-serif;
         color: #333;
     }
+
+
+    /* ==========================================================
+           HEADER
+           ========================================================== */
 
     .header-bar {
         background-color: #007bff;
@@ -38,6 +55,11 @@
             align-items: center;
         }
 
+
+    /* ==========================================================
+           CARD
+           ========================================================== */
+
     .card-form {
         background-color: #fff;
         border-radius: 16px;
@@ -57,6 +79,11 @@
             font-size: 0.9rem;
         }
 
+
+    /* ==========================================================
+           BOTONES
+           ========================================================== */
+
     .btn-success {
         background-color: #28c76f;
         border: none;
@@ -75,6 +102,7 @@
 
         .btn-info:hover {
             background-color: #138496;
+            color: white;
         }
 
     .btn-ver-horarios {
@@ -82,6 +110,44 @@
         color: white;
         font-weight: 600;
     }
+
+
+    /* ==========================================================
+           FECHA / HORA
+           ========================================================== */
+
+    .d-flex-hora {
+        display: flex;
+        gap: .5rem;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    /*
+           Bootstrap 5 utiliza aproximadamente 38px
+           para form-control/form-select.
+        */
+
+    #fechaCita,
+    #horaCita {
+        height: 38px;
+    }
+
+    #horaCita {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    #btnVerHorarios {
+        height: 38px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+
+    /* ==========================================================
+           MODAL
+           ========================================================== */
 
     .modal-dialog {
         max-width: 800px;
@@ -92,71 +158,109 @@
         color: white;
     }
 
-    .d-flex-hora {
-        display: flex;
-        gap: .5rem;
-    }
+
+    /* ==========================================================
+           ALERTAS
+           ========================================================== */
 
     .alert-custom {
         border-radius: 10px;
         font-size: .95rem;
     }
+
 </style>
+
 
 <div class="container mt-4">
 
-    <!-- HEADER -->
+    <!-- ======================================================
+         HEADER
+         ====================================================== -->
+
     <div class="header-bar">
+
         <h4>
             <i class="bi bi-pencil-square me-2"></i>
             Editar Cita
         </h4>
+
     </div>
 
-    <!-- ALERTAS -->
+
+    <!-- ======================================================
+         ALERTA ERROR
+         ====================================================== -->
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show alert-custom">
+
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
+
             @TempData["Error"]
 
             <button type="button"
                     class="btn-close"
                     data-bs-dismiss="alert">
             </button>
+
         </div>
     }
 
+
+    <!-- ======================================================
+         ALERTA SUCCESS
+         ====================================================== -->
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show alert-custom">
+
             <i class="bi bi-check-circle-fill me-2"></i>
+
             @TempData["Success"]
 
             <button type="button"
                     class="btn-close"
                     data-bs-dismiss="alert">
             </button>
+
         </div>
     }
 
-    <!-- FORM -->
+
+    <!-- ======================================================
+         FORMULARIO
+         ====================================================== -->
+
     <div class="card-form">
 
-        <form asp-action="Editar" method="post">
+        <form asp-action="Editar"
+              method="post">
 
-            <!-- TOKEN -->
             @Html.AntiForgeryToken()
 
-            <!-- ID -->
-            <input type="hidden" asp-for="Id_Cita" />
 
-            <!-- VALIDACIONES -->
+            <!-- ==================================================
+                 ID DE CITA
+                 ================================================== -->
+
+            <input type="hidden"
+                   asp-for="Id_Cita"
+                   id="Id_Cita" />
+
+
+            <!-- ==================================================
+                 VALIDACIONES
+                 ================================================== -->
+
             <div asp-validation-summary="ModelOnly"
                  class="alert alert-danger">
             </div>
 
-            <!-- PACIENTE -->
+
+            <!-- ==================================================
+                 PACIENTE
+                 ================================================== -->
+
             <div class="mb-3">
 
                 <label class="form-label">
@@ -169,7 +273,7 @@
                            id="pacienteNombre"
                            class="form-control"
                            readonly
-                           value="@Model.Paciente?.Nombres @Model.Paciente?.Apellidos" />
+                           value="@($"{Model.Paciente?.Nombres} {Model.Paciente?.Apellidos}".Trim())" />
 
                     <input type="hidden"
                            asp-for="Id_Paciente"
@@ -186,9 +290,17 @@
 
                 </div>
 
+                <span asp-validation-for="Id_Paciente"
+                      class="text-danger">
+                </span>
+
             </div>
 
-            <!-- MEDICO -->
+
+            <!-- ==================================================
+                 MEDICO
+                 ================================================== -->
+
             <div class="mb-3">
 
                 <label class="form-label">
@@ -201,7 +313,7 @@
                            id="medicoNombre"
                            class="form-control"
                            readonly
-                           value="@Model.Medico?.Nombres @Model.Medico?.Apellidos" />
+                           value="@($"{Model.Medico?.Nombres} {Model.Medico?.Apellidos}".Trim())@(string.IsNullOrWhiteSpace(Model.Medico?.Especialidad) ? "" : $" — {Model.Medico.Especialidad}")" />
 
                     <input type="hidden"
                            asp-for="Id_Medico"
@@ -218,12 +330,24 @@
 
                 </div>
 
+                <span asp-validation-for="Id_Medico"
+                      class="text-danger">
+                </span>
+
             </div>
 
-            <!-- FECHA Y HORA -->
+
+            <!-- ==================================================
+                 FECHA Y HORA
+                 ================================================== -->
+
             <div class="row mb-3">
 
-                <!-- FECHA -->
+
+                <!-- ==================================================
+                     FECHA
+                     ================================================== -->
+
                 <div class="col-md-6">
 
                     <label class="form-label">
@@ -234,7 +358,7 @@
                            asp-for="Fecha"
                            class="form-control"
                            id="fechaCita"
-                           value="@(Model.Fecha.ToString("yyyy-MM-dd"))" />
+                           value="@Model.Fecha.ToString("yyyy-MM-dd")" />
 
                     <span asp-validation-for="Fecha"
                           class="text-danger">
@@ -242,7 +366,11 @@
 
                 </div>
 
-                <!-- HORA -->
+
+                <!-- ==================================================
+                     HORA
+                     ================================================== -->
+
                 <div class="col-md-6">
 
                     <label class="form-label">
@@ -256,31 +384,14 @@
                                 id="horaCita">
 
                             <option value="">
-                                Seleccionar
+                                Cargando horarios...
                             </option>
-
-                            @for (int h = 8; h <= 22; h++)
-                            {
-                                var hora = $"{h:00}:00";
-                                var actual = Model.Hora.ToString(@"hh\:mm");
-
-                                if (actual == hora)
-                                {
-                                    <option value="@hora" selected>
-                                        @hora
-                                    </option>
-                                }
-                                else
-                                {
-                                    <option value="@hora">
-                                        @hora
-                                    </option>
-                                }
-                            }
 
                         </select>
 
+
                         <button type="button"
+                                id="btnVerHorarios"
                                 class="btn btn-info"
                                 onclick="abrirHorarios()">
 
@@ -298,7 +409,11 @@
 
             </div>
 
-            <!-- MOTIVO -->
+
+            <!-- ==================================================
+                 MOTIVO
+                 ================================================== -->
+
             <div class="mb-3">
 
                 <label class="form-label">
@@ -307,8 +422,7 @@
 
                 <textarea asp-for="Motivo"
                           class="form-control"
-                          rows="3">
-                </textarea>
+                          rows="3"></textarea>
 
                 <span asp-validation-for="Motivo"
                       class="text-danger">
@@ -316,10 +430,18 @@
 
             </div>
 
-            <!-- MODAL -->
+
+            <!-- ==================================================
+                 CONTENEDOR DEL MODAL DE HORARIOS
+                 ================================================== -->
+
             <div id="modalHorariosContainer"></div>
 
-            <!-- BOTONES -->
+
+            <!-- ==================================================
+                 BOTONES
+                 ================================================== -->
+
             <div class="d-flex justify-content-between">
 
                 <a asp-action="Listar"
@@ -328,6 +450,7 @@
                     Cancelar
 
                 </a>
+
 
                 <button type="submit"
                         class="btn btn-success w-50 ms-1">
@@ -344,282 +467,678 @@
 
 </div>
 
-<!-- MODAL PACIENTE -->
+
+<!-- ==========================================================
+     MODAL PACIENTE
+     ========================================================== -->
+
 <partial name="~/Views/Shared/_modalSeleccionarPaciente.cshtml"
          model="ViewBag.Pacientes" />
 
-<!-- MODAL MEDICO -->
+
+<!-- ==========================================================
+     MODAL MEDICO
+     ========================================================== -->
+
 <partial name="~/Views/Shared/_modalSeleccionarMedico.cshtml"
          model="ViewBag.Medicos" />
 
-<!-- SCRIPTS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 @section Scripts {
 
-    <!-- VALIDACIONES -->
+    <!-- ======================================================
+         VALIDACIONES
+         ====================================================== -->
+
     <partial name="_ValidationScriptsPartial" />
 
-    <script src="@Url.Content("~/js/citas.js")"></script>
+
+    <!-- ======================================================
+         SWEETALERT
+         ====================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <script>
 
-        // =========================================
-        // ALERTAS SWEETALERT
-        // =========================================
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+
+                // =================================================
+                // CONTROLES
+                // =================================================
+
+                const medicoInput =
+                    document.getElementById("medicoId");
+
+                const fechaInput =
+                    document.getElementById("fechaCita");
+
+                const horaSelect =
+                    document.getElementById("horaCita");
+
+                const idCitaInput =
+                    document.getElementById("Id_Cita");
+
+                const pacienteInput =
+                    document.getElementById("pacienteId");
+
+
+                // =================================================
+                // VALIDAR CONTROLES
+                // =================================================
+
+                if (!medicoInput ||
+                    !fechaInput ||
+                    !horaSelect) {
+
+                    console.error(
+                        "No se encontraron los controles necesarios para Editar Cita."
+                    );
+
+                    return;
+                }
+
+
+                // =================================================
+                // FECHA LOCAL DE HOY
+                // =================================================
+
+                function obtenerFechaLocal() {
+
+                    const ahora =
+                        new Date();
+
+                    return `${ahora.getFullYear()}-${String(
+                        ahora.getMonth() + 1
+                    ).padStart(2, "0")}-${String(
+                        ahora.getDate()
+                    ).padStart(2, "0")}`;
+                }
+
+
+                const hoy =
+                    obtenerFechaLocal();
+
+
+                // =================================================
+                // DATOS ORIGINALES
+                // =================================================
+
+                const medicoOriginal =
+                    medicoInput.value;
+
+                const fechaOriginal =
+                    '@Model.Fecha.ToString("yyyy-MM-dd")';
+
+                const horaOriginal =
+                    '@Model.Hora.ToString(@"hh\:mm")';
+
+                const idMedicoOriginal =
+                    '@Model.Id_Medico';
+
+
+                // =================================================
+                // FECHA MINIMA
+                // =================================================
+
+                fechaInput.min = hoy;
+
+
+                // =================================================
+                // CARGAR HORAS DISPONIBLES
+                // =================================================
+
+                async function cargarHorasDisponibles() {
+
+                    const idMedico =
+                        medicoInput.value.trim();
+
+                    const fecha =
+                        fechaInput.value;
+
+                    const idCita =
+                        idCitaInput
+                            ? idCitaInput.value
+                            : "0";
+
+
+                    // ---------------------------------------------
+                    // LIMPIAR SELECT
+                    // ---------------------------------------------
+
+                    horaSelect.innerHTML = "";
+
+                    horaSelect.disabled = true;
+
+
+                    // ---------------------------------------------
+                    // VALIDAR MEDICO
+                    // ---------------------------------------------
+
+                    if (!idMedico) {
+
+                        horaSelect.innerHTML =
+                            '<option value="">Seleccione primero un médico</option>';
+
+                        return;
+                    }
+
+
+                    // ---------------------------------------------
+                    // VALIDAR FECHA
+                    // ---------------------------------------------
+
+                    if (!fecha) {
+
+                        horaSelect.innerHTML =
+                            '<option value="">Seleccione una fecha</option>';
+
+                        return;
+                    }
+
+
+                    // ---------------------------------------------
+                    // VALIDAR FECHA ANTERIOR
+                    // ---------------------------------------------
+
+                    if (fecha < hoy) {
+
+                        horaSelect.innerHTML =
+                            '<option value="">Fecha no válida</option>';
+
+                        return;
+                    }
+
+
+                    // ---------------------------------------------
+                    // CARGANDO
+                    // ---------------------------------------------
+
+                    horaSelect.innerHTML =
+                        '<option value="">Cargando horarios...</option>';
+
+
+                    try {
+
+                        const url =
+                            `/Cita/HorasDisponibles?idMedico=${encodeURIComponent(idMedico)}&fecha=${encodeURIComponent(fecha)}&idCita=${encodeURIComponent(idCita)}`;
+
+
+                        const response =
+                            await fetch(url);
+
+
+                        if (!response.ok) {
+
+                            throw new Error(
+                                `Error HTTP ${response.status}`
+                            );
+                        }
+
+
+                        const data =
+                            await response.json();
+
+
+                        horaSelect.innerHTML = "";
+
+
+                        // -----------------------------------------
+                        // SIN HORAS
+                        // -----------------------------------------
+
+                        if (!data.ok ||
+                            !data.horas ||
+                            data.horas.length === 0) {
+
+                            const option =
+                                document.createElement("option");
+
+                            option.value = "";
+
+                            option.textContent =
+                                data.mensaje ||
+                                "No hay horas disponibles";
+
+                            horaSelect.appendChild(option);
+
+                            return;
+                        }
+
+
+                        // -----------------------------------------
+                        // OPCION INICIAL
+                        // -----------------------------------------
+
+                        const inicial =
+                            document.createElement("option");
+
+                        inicial.value = "";
+
+                        inicial.textContent =
+                            "Seleccione una hora";
+
+                        horaSelect.appendChild(
+                            inicial
+                        );
+
+
+                        // -----------------------------------------
+                        // HORAS
+                        // -----------------------------------------
+
+                        data.horas.forEach(
+                            function (hora) {
+
+                                const option =
+                                    document.createElement(
+                                        "option"
+                                    );
+
+
+                                option.value =
+                                    hora;
+
+                                option.textContent =
+                                    hora;
+
+
+                                /*
+                                 * SOLAMENTE conservar la hora
+                                 * original si seguimos usando:
+                                 *
+                                 * 1. el mismo médico
+                                 * 2. la misma fecha
+                                 *
+                                 * Si se cambia de médico, no
+                                 * debemos seleccionar automáticamente
+                                 * la hora del médico anterior.
+                                 */
+
+                                if (
+                                    String(idMedico) ===
+                                    String(idMedicoOriginal) &&
+
+                                    fecha ===
+                                    fechaOriginal &&
+
+                                    hora ===
+                                    horaOriginal
+                                ) {
+
+                                    option.selected =
+                                        true;
+                                }
+
+
+                                horaSelect.appendChild(
+                                    option
+                                );
+
+                            }
+                        );
+
+
+                        horaSelect.disabled =
+                            false;
+
+                    }
+                    catch (error) {
+
+                        console.error(
+                            "Error cargando horarios de edición:",
+                            error
+                        );
+
+
+                        horaSelect.innerHTML =
+                            '<option value="">No se pudieron cargar los horarios</option>';
+                    }
+
+                }
+
+
+                // =================================================
+                // CAMBIO DE MEDICO
+                // =================================================
+
+                medicoInput.addEventListener(
+                    "change",
+                    function () {
+
+                        /*
+                         * Cuando se selecciona otro médico,
+                         * se cargan nuevamente sus horarios.
+                         */
+
+                        cargarHorasDisponibles();
+
+                    }
+                );
+
+
+                // =================================================
+                // CAMBIO DE FECHA
+                // =================================================
+
+                fechaInput.addEventListener(
+                    "change",
+                    function () {
+
+                        const nuevaFecha =
+                            this.value;
+
+
+                        if (nuevaFecha < hoy) {
+
+                            Swal.fire(
+                                "Fecha no válida",
+                                "No puede seleccionar una fecha anterior a hoy.",
+                                "warning"
+                            );
+
+
+                            this.value =
+                                hoy;
+                        }
+
+
+                        cargarHorasDisponibles();
+
+                    }
+                );
+
+
+                // =================================================
+                // CARGA INICIAL
+                // =================================================
+
+                cargarHorasDisponibles();
+
+
+                // =================================================
+                // BUSQUEDA DE PACIENTES
+                // =================================================
+
+                const buscarPacienteInput =
+                    document.getElementById(
+                        "buscarPacienteInput"
+                    );
+
+                const btnBuscarPaciente =
+                    document.getElementById(
+                        "btnBuscarPaciente"
+                    );
+
+
+                if (buscarPacienteInput) {
+
+                    buscarPacienteInput.addEventListener(
+                        "keydown",
+                        function (event) {
+
+                            if (event.key === "Enter") {
+
+                                event.preventDefault();
+
+                                buscarPaciente();
+
+                            }
+
+                        }
+                    );
+
+
+                    buscarPacienteInput.addEventListener(
+                        "input",
+                        function () {
+
+                            buscarPaciente();
+
+                        }
+                    );
+
+                }
+
+
+                if (btnBuscarPaciente) {
+
+                    btnBuscarPaciente.addEventListener(
+                        "click",
+                        function () {
+
+                            buscarPaciente();
+
+                        }
+                    );
+
+                }
+
+            }
+        );
+
+
+        // ==========================================================
+        // BUSCAR PACIENTE
+        // ==========================================================
+
+        async function buscarPaciente() {
+
+            const input =
+                document.getElementById(
+                    "buscarPacienteInput"
+                );
+
+
+            const tbody =
+                document.querySelector(
+                    "#tablaPacientes tbody"
+                );
+
+
+            if (!input || !tbody) {
+
+                return;
+            }
+
+
+            const texto =
+                input.value.trim();
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/Paciente/Buscar?texto=${encodeURIComponent(texto)}`
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        `Error HTTP ${response.status}`
+                    );
+                }
+
+
+                const pacientes =
+                    await response.json();
+
+
+                tbody.innerHTML = "";
+
+
+                if (!pacientes ||
+                    pacientes.length === 0) {
+
+                    tbody.innerHTML =
+                        `
+                        <tr>
+                            <td colspan="4"
+                                class="text-center text-muted">
+                                No se encontraron pacientes.
+                            </td>
+                        </tr>
+                        `;
+
+                    return;
+                }
+
+
+                pacientes.forEach(
+                    function (p) {
+
+                        const nombreCompleto =
+                            `${p.nombres ?? ""} ${p.apellidos ?? ""}`
+                                .trim();
+
+
+                        const tr =
+                            document.createElement("tr");
+
+
+                        tr.innerHTML =
+                            `
+                            <td>${p.id_Paciente ?? p.id}</td>
+
+                            <td>${p.nombres ?? ""}</td>
+
+                            <td>${p.apellidos ?? ""}</td>
+
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-primary"
+                                    onclick="seleccionarPaciente(${p.id_Paciente ?? p.id}, '${nombreCompleto.replace(/'/g, "\\'")}')">
+                                    Seleccionar
+                                </button>
+                            </td>
+                            `;
+
+
+                        tbody.appendChild(tr);
+
+                    }
+                );
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Error buscando pacientes:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        // ==========================================================
+        // SELECCIONAR PACIENTE
+        // ==========================================================
+
+        function seleccionarPaciente(
+            id,
+            nombre
+        ) {
+
+            const pacienteId =
+                document.getElementById(
+                    "pacienteId"
+                );
+
+            const pacienteNombre =
+                document.getElementById(
+                    "pacienteNombre"
+                );
+
+
+            if (pacienteId) {
+
+                pacienteId.value =
+                    id;
+
+            }
+
+
+            if (pacienteNombre) {
+
+                pacienteNombre.value =
+                    nombre;
+
+            }
+
+
+            const modalElement =
+                document.getElementById(
+                    "modalPacientes"
+                );
+
+
+            if (modalElement) {
+
+                const modal =
+                    bootstrap.Modal.getInstance(
+                        modalElement
+                    );
+
+
+                if (modal) {
+
+                    modal.hide();
+
+                }
+
+            }
+
+        }
+
+
+        // ==========================================================
+        // ALERTAS TEMP DATA
+        // ==========================================================
 
         @if (TempData["Error"] != null)
         {
             <text>
+
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: '@TempData["Error"]',
+                        text: @Html.Raw(
+                       System.Text.Json.JsonSerializer.Serialize(
+                           TempData["Error"]?.ToString()
+                       )
+                   ),
                         confirmButtonColor: '#d33'
                     });
+
             </text>
         }
+
 
         @if (TempData["Success"] != null)
         {
             <text>
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Correcto',
-                        text: '@TempData["Success"]',
+                        text: @Html.Raw(
+                       System.Text.Json.JsonSerializer.Serialize(
+                           TempData["Success"]?.ToString()
+                       )
+                   ),
                         confirmButtonColor: '#28c76f'
                     });
+
             </text>
-        }
-
-        // =========================================
-        // BUSCAR CON ENTER
-        // =========================================
-
-        document.getElementById("buscarPacienteInput")
-            .addEventListener("keyup", function (e) {
-
-                if (e.key === "Enter") {
-                    buscarPaciente();
-                }
-
-            });
-
-        document.getElementById("buscarMedicoInput")
-            .addEventListener("keyup", function (e) {
-
-                if (e.key === "Enter") {
-                    buscarMedico();
-                }
-
-            });
-
-        // =========================================
-        // RECARGAR LISTA
-        // =========================================
-
-        document.getElementById("buscarPacienteInput")
-            .addEventListener("input", function () {
-
-                if (this.value.trim() === "") {
-                    buscarPaciente();
-                }
-
-            });
-
-        document.getElementById("buscarMedicoInput")
-            .addEventListener("input", function () {
-
-                if (this.value.trim() === "") {
-                    buscarMedico();
-                }
-
-            });
-
-        // =========================================
-        // BUSCAR PACIENTE
-        // =========================================
-
-        document.getElementById("btnBuscarPaciente")
-            .addEventListener("click", buscarPaciente);
-
-        async function buscarPaciente() {
-
-            let texto =
-                document.getElementById("buscarPacienteInput")
-                    .value.trim();
-
-            if (texto === "") {
-                texto = " ";
-            }
-
-            const response =
-                await fetch(`/Paciente/Buscar?texto=${encodeURIComponent(texto)}`);
-
-            const data = await response.json();
-
-            let tbody =
-                document.querySelector("#tablaPacientes tbody");
-
-            tbody.innerHTML = "";
-
-            if (data.length === 0) {
-
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4"
-                            class="text-center text-muted">
-
-                            No se encontraron pacientes
-
-                        </td>
-                    </tr>
-                `;
-
-                return;
-            }
-
-            data.forEach(p => {
-
-                const nombreCompleto =
-                    `${p.nombres} ${p.apellidos}`;
-
-                tbody.innerHTML += `
-                    <tr>
-
-                        <td>${p.nombres}</td>
-
-                        <td>${p.apellidos}</td>
-
-                        <td>${p.dni}</td>
-
-                        <td>
-
-                            <button type="button"
-                                    class="btn btn-sm btn-primary"
-                                    onclick="seleccionarPaciente(
-                                        ${p.id},
-                                        \`${nombreCompleto}\`
-                                    )">
-
-                                Seleccionar
-
-                            </button>
-
-                        </td>
-
-                    </tr>
-                `;
-            });
-        }
-
-        // =========================================
-        // SELECCIONAR PACIENTE
-        // =========================================
-
-        function seleccionarPaciente(id, nombre) {
-
-            document.getElementById("pacienteId").value = id;
-
-            document.getElementById("pacienteNombre").value = nombre;
-
-            bootstrap.Modal
-                .getInstance(document.getElementById('modalPacientes'))
-                .hide();
-        }
-
-        // =========================================
-        // BUSCAR MEDICO
-        // =========================================
-
-        document.getElementById("btnBuscarMedico")
-            .addEventListener("click", buscarMedico);
-
-        async function buscarMedico() {
-
-            let texto =
-                document.getElementById("buscarMedicoInput")
-                    .value.trim();
-
-            if (texto === "") {
-                texto = " ";
-            }
-
-            const response =
-                await fetch(`/Medico/Buscar?texto=${encodeURIComponent(texto)}`);
-
-            const data = await response.json();
-
-            let tbody =
-                document.querySelector("#tablaMedicos tbody");
-
-            tbody.innerHTML = "";
-
-            if (data.length === 0) {
-
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4"
-                            class="text-center text-muted">
-
-                            No se encontraron médicos
-
-                        </td>
-                    </tr>
-                `;
-
-                return;
-            }
-
-            data.forEach(m => {
-
-                const nombreCompleto =
-                    `${m.nombres} ${m.apellidos}`;
-
-                tbody.innerHTML += `
-                    <tr>
-
-                        <td>${m.nombres}</td>
-
-                        <td>${m.apellidos}</td>
-
-                        <td>${m.especialidad}</td>
-
-                        <td>
-
-                            <button type="button"
-                                    class="btn btn-sm btn-primary"
-                                    onclick="seleccionarMedico(
-                                        ${m.id},
-                                        \`${nombreCompleto}\`
-                                    )">
-
-                                Seleccionar
-
-                            </button>
-
-                        </td>
-
-                    </tr>
-                `;
-            });
-        }
-
-        // =========================================
-        // SELECCIONAR MEDICO
-        // =========================================
-
-        function seleccionarMedico(id, nombre) {
-
-            document.getElementById("medicoId").value = id;
-
-            document.getElementById("medicoNombre").value = nombre;
-
-            bootstrap.Modal
-                .getInstance(document.getElementById('modalMedicos'))
-                .hide();
         }
 
     </script>

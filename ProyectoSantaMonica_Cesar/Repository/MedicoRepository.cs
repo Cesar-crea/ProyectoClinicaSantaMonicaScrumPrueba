@@ -31,6 +31,7 @@ namespace ProyectoSantaMonica_Cesar.Repository
 
                 while (await dr.ReadAsync())
                 {
+                   
                     lista.Add(new Medico
                     {
                         Id_Medico = (int)dr["Id_Medico"],

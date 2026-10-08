@@ -1,135 +1,146 @@
-﻿function abrirHorarios() {
-
-    ```
-const medicoInput =
-    document.getElementById("medicoId");
-
-const fechaInput =
-    document.getElementById("fechaCita");
+﻿// ==========================================================
+// CITAS - HORARIOS
+// ==========================================================
 
 
-// =====================================================
-// VALIDAR MÉDICO
-// =====================================================
+function abrirHorarios() {
 
-if (!medicoInput) {
+    const medicoInput =
+        document.getElementById("medicoId");
 
-    console.error(
-        "No existe el elemento #medicoId"
+    const fechaInput =
+        document.getElementById("fechaCita");
+
+
+    // ======================================================
+    // VALIDAR MEDICO
+    // ======================================================
+
+    if (!medicoInput ||
+        !medicoInput.value) {
+
+        Swal.fire(
+            "Médico requerido",
+            "Seleccione un médico primero.",
+            "warning"
+        );
+
+        return;
+    }
+
+
+    // ======================================================
+    // VALIDAR FECHA
+    // ======================================================
+
+    if (!fechaInput ||
+        !fechaInput.value) {
+
+        Swal.fire(
+            "Fecha requerida",
+            "Seleccione una fecha primero.",
+            "warning"
+        );
+
+        return;
+    }
+
+
+    // ======================================================
+    // FECHA LOCAL
+    // ======================================================
+
+    const ahora =
+        new Date();
+
+
+    const fechaHoy =
+        `${ahora.getFullYear()}-${String(
+            ahora.getMonth() + 1
+        ).padStart(2, "0")}-${String(
+            ahora.getDate()
+        ).padStart(2, "0")}`;
+
+
+    // ======================================================
+    // VALIDAR FECHA ANTERIOR
+    // ======================================================
+
+    if (fechaInput.value < fechaHoy) {
+
+        Swal.fire(
+            "Fecha no válida",
+            "No puede consultar horarios de fechas anteriores a hoy.",
+            "warning"
+        );
+
+        return;
+    }
+
+
+    // ======================================================
+    // CARGAR MODAL
+    // ======================================================
+
+    mostrarHorarios(
+        medicoInput.value,
+        fechaInput.value
     );
 
-    Swal.fire(
-        "Error",
-        "No se encontró el médico.",
-        "error"
-    );
-
-    return;
 }
 
 
-// =====================================================
-// VALIDAR FECHA
-// =====================================================
-
-if (!fechaInput) {
-
-    console.error(
-        "No existe el elemento #fechaCita"
-    );
-
-    Swal.fire(
-        "Error",
-        "No se encontró la fecha.",
-        "error"
-    );
-
-    return;
-}
-
-
-const idMedico =
-    medicoInput.value;
-
-const fecha =
-    fechaInput.value;
-
-
-mostrarHorarios(
-    idMedico,
-    fecha
-);
-```
-
-}
-
-// =========================================================
+// ==========================================================
 // MOSTRAR HORARIOS
-// =========================================================
+// ==========================================================
 
-function mostrarHorarios(
+async function mostrarHorarios(
     idMedico,
     fecha
 ) {
 
-    ```
-// -----------------------------------------------------
-// Validar médico
-// -----------------------------------------------------
+    try {
 
-if (!idMedico) {
+        // ==================================================
+        // URL
+        // ==================================================
 
-    Swal.fire(
-        "Médico requerido",
-        "Seleccione un médico primero.",
-        "warning"
-    );
-
-    return;
-}
+        const url =
+            `/Cita/HorariosOcupados?idMedico=${encodeURIComponent(
+                idMedico
+            )}&fecha=${encodeURIComponent(
+                fecha
+            )}`;
 
 
-// -----------------------------------------------------
-// Validar fecha
-// -----------------------------------------------------
+        // ==================================================
+        // REQUEST
+        // ==================================================
 
-if (!fecha) {
+        const response =
+            await fetch(url);
 
-    Swal.fire(
-        "Fecha requerida",
-        "Seleccione una fecha.",
-        "warning"
-    );
-
-    return;
-}
-
-
-// -----------------------------------------------------
-// Cargar horarios desde CitaController
-// -----------------------------------------------------
-
-const url =
-    `/ Cita / HorariosOcupados ? idMedico = ${ encodeURIComponent(idMedico) }& fecha=${ encodeURIComponent(fecha) } `;
-
-
-fetch(url)
-
-    .then(response => {
 
         if (!response.ok) {
 
             throw new Error(
-                `Error HTTP ${ response.status } `
+                `Error HTTP ${response.status}`
             );
 
         }
 
-        return response.text();
 
-    })
+        // ==================================================
+        // HTML DEL PARTIAL
+        // ==================================================
 
-    .then(html => {
+        const html =
+            await response.text();
+
+
+        // ==================================================
+        // CONTENEDOR
+        // ==================================================
 
         const container =
             document.getElementById(
@@ -140,23 +151,19 @@ fetch(url)
         if (!container) {
 
             throw new Error(
-                "No existe #modalHorariosContainer"
+                "No existe #modalHorariosContainer."
             );
 
         }
 
 
-        // -------------------------------------------------
-        // Insertar contenido del modal
-        // -------------------------------------------------
-
         container.innerHTML =
             html;
 
 
-        // -------------------------------------------------
-        // Obtener modal
-        // -------------------------------------------------
+        // ==================================================
+        // MODAL
+        // ==================================================
 
         const modalElement =
             document.getElementById(
@@ -167,26 +174,26 @@ fetch(url)
         if (!modalElement) {
 
             throw new Error(
-                "No existe #modalHorarios"
+                "No existe #modalHorarios."
             );
 
         }
 
 
-        // -------------------------------------------------
-        // Mostrar modal
-        // -------------------------------------------------
+        // ==================================================
+        // BOOTSTRAP MODAL
+        // ==================================================
 
         const modal =
             bootstrap.Modal.getOrCreateInstance(
                 modalElement
             );
 
+
         modal.show();
 
-    })
-
-    .catch(error => {
+    }
+    catch (error) {
 
         console.error(
             "Error al cargar horarios:",
@@ -200,29 +207,28 @@ fetch(url)
             "error"
         );
 
-    });
-```
+    }
 
 }
 
-// =========================================================
-// CERRAR / LIMPIAR MODAL DE HORARIOS
-// =========================================================
+
+// ==========================================================
+// CERRAR MODAL
+// ==========================================================
 
 function cerrarModal() {
 
-    ```
-const container =
-    document.getElementById(
-        "modalHorariosContainer"
-    );
+    const container =
+        document.getElementById(
+            "modalHorariosContainer"
+        );
 
 
-if (container) {
+    if (container) {
 
-    container.innerHTML = "";
+        container.innerHTML =
+            "";
 
-}
-```
+    }
 
 }

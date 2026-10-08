@@ -37,23 +37,9 @@ namespace ProyectoSantaMonica_Cesar.Controllers
         }
 
 
-        // =====================================================
+        // ==========================================================
         // LISTAR CITAS
-        //
-        // REGLA FUNCIONAL:
-        //
-        // 1. Sin búsqueda:
-        //    - Por defecto muestra solamente PENDIENTES.
-        //
-        // 2. Con búsqueda por paciente:
-        //    - Muestra TODAS las citas que coincidan.
-        //    - No importa el estado.
-        //    - PENDIENTE aparece primero.
-        //
-        // 3. Ver más:
-        //    - Muestra TODAS las citas.
-        //    - PENDIENTE aparece primero.
-        // =====================================================
+        // ==========================================================
 
         [HttpGet]
         public async Task<IActionResult> Listar(
@@ -64,111 +50,92 @@ namespace ProyectoSantaMonica_Cesar.Controllers
             {
                 List<Cita> lista;
 
-                // -------------------------------------------------
-                // Actualizar automáticamente los estados
-                // -------------------------------------------------
-
                 await _service.ActualizarEstadosAutomaticosAsync();
 
                 texto = texto?.Trim();
 
-                // =================================================
-                // 1. HAY BÚSQUEDA
-                //
-                // La búsqueda SIEMPRE consulta todas las citas.
-                // No importa si están:
-                // PENDIENTE
-                // PAGADO
-                // ATENDIDO
-                // CANCELADO
-                // VENCIDO
-                // =================================================
+
+                // ==================================================
+                // CON BÚSQUEDA
+                // ==================================================
 
                 if (!string.IsNullOrWhiteSpace(texto))
                 {
-                    var todas = await _service.ListarAsync();
+                    var todas =
+                        await _service.ListarAsync();
 
-                    lista = todas
-                        .Where(c =>
-                            c.Paciente != null &&
-                            (
-                                c.Paciente.Nombres.Contains(
-                                    texto,
-                                    StringComparison.OrdinalIgnoreCase)
-
-                                ||
-
-                                c.Paciente.Apellidos.Contains(
-                                    texto,
-                                    StringComparison.OrdinalIgnoreCase)
-
-                                ||
-
-                                $"{c.Paciente.Nombres} {c.Paciente.Apellidos}"
-                                    .Contains(
+                    lista =
+                        todas
+                            .Where(c =>
+                                c.Paciente != null &&
+                                (
+                                    c.Paciente.Nombres.Contains(
                                         texto,
                                         StringComparison.OrdinalIgnoreCase)
+
+                                    ||
+
+                                    c.Paciente.Apellidos.Contains(
+                                        texto,
+                                        StringComparison.OrdinalIgnoreCase)
+
+                                    ||
+
+                                    $"{c.Paciente.Nombres} {c.Paciente.Apellidos}"
+                                        .Contains(
+                                            texto,
+                                            StringComparison.OrdinalIgnoreCase)
+                                )
                             )
-                        )
-                        // PENDIENTE SIEMPRE PRIMERO
-                        .OrderBy(c =>
-                            c.Estado == EstadoCita.PENDIENTE ? 0 : 1)
-
-                        // Luego fecha
-                        .ThenBy(c => c.Fecha)
-
-                        // Luego hora
-                        .ThenBy(c => c.Hora)
-
-                        .ToList();
+                            .OrderBy(c =>
+                                c.Estado == EstadoCita.PENDIENTE
+                                    ? 0
+                                    : 1)
+                            .ThenBy(c => c.Fecha)
+                            .ThenBy(c => c.Hora)
+                            .ToList();
                 }
 
-                // =================================================
-                // 2. SIN BÚSQUEDA
-                //    Y SIN "VER MÁS"
-                //
-                // Mostrar solamente PENDIENTES
-                // =================================================
+
+                // ==================================================
+                // SIN BÚSQUEDA
+                // SOLO PENDIENTES
+                // ==================================================
 
                 else if (!verTodas)
                 {
-                    lista = await _service.ListarPorEstadoAsync(
-                        EstadoCita.PENDIENTE);
+                    lista =
+                        await _service.ListarPorEstadoAsync(
+                            EstadoCita.PENDIENTE);
 
-                    lista = lista
-                        .OrderBy(c => c.Fecha)
-                        .ThenBy(c => c.Hora)
-                        .ToList();
+                    lista =
+                        lista
+                            .OrderBy(c => c.Fecha)
+                            .ThenBy(c => c.Hora)
+                            .ToList();
                 }
 
-                // =================================================
-                // 3. SIN BÚSQUEDA
-                //    Y CON "VER MÁS"
-                //
-                // Mostrar todas las citas
-                // =================================================
+
+                // ==================================================
+                // VER TODAS
+                // ==================================================
 
                 else
                 {
-                    lista = await _service.ListarAsync();
+                    lista =
+                        await _service.ListarAsync();
 
-                    lista = lista
-                        // PENDIENTE SIEMPRE PRIMERO
-                        .OrderBy(c =>
-                            c.Estado == EstadoCita.PENDIENTE ? 0 : 1)
-
-                        // Luego fecha
-                        .ThenBy(c => c.Fecha)
-
-                        // Luego hora
-                        .ThenBy(c => c.Hora)
-
-                        .ToList();
+                    lista =
+                        lista
+                            .OrderBy(c =>
+                                c.Estado == EstadoCita.PENDIENTE
+                                    ? 0
+                                    : 1)
+                            .ThenBy(c => c.Fecha)
+                            .ThenBy(c => c.Hora)
+                            .ToList();
                 }
 
-                // -------------------------------------------------
-                // Datos para la vista
-                // -------------------------------------------------
 
                 ViewBag.Texto = texto;
                 ViewBag.VerTodas = verTodas;
@@ -177,21 +144,25 @@ namespace ProyectoSantaMonica_Cesar.Controllers
             }
             catch (Exception ex)
             {
-                TempData["Error"] = ex.Message;
+                TempData["Error"] =
+                    ex.Message;
 
                 ViewBag.Texto = texto;
                 ViewBag.VerTodas = verTodas;
 
-                return View(new List<Cita>());
+                return View(
+                    new List<Cita>()
+                );
             }
         }
 
-// ==========================================================
-// REGISTRAR - GET
-// ==========================================================
 
-[HttpGet]
-public async Task<IActionResult> Registrar()
+        // ==========================================================
+        // REGISTRAR - GET
+        // ==========================================================
+
+        [HttpGet]
+        public async Task<IActionResult> Registrar()
         {
             ViewBag.Pacientes =
                 _pacienteservice.ListarTodosPaciente();
@@ -199,22 +170,19 @@ public async Task<IActionResult> Registrar()
             ViewBag.Medicos =
                 await _medicoservice.ListarTodosAsync();
 
-            var cita = new Cita
-            {
-                // La fecha inicia en HOY
-                Fecha = DateTime.Today,
-
-                // Nueva cita inicia como PENDIENTE
-                Estado = EstadoCita.PENDIENTE
-            };
+            var cita =
+                new Cita
+                {
+                    Fecha = DateTime.Today,
+                    Estado = EstadoCita.PENDIENTE
+                };
 
             return View(cita);
         }
 
 
-         
         // ==========================================================
-        // REGISTRAR NUEVA CITA - POST
+        // REGISTRAR - POST
         // ==========================================================
 
         [HttpPost]
@@ -227,9 +195,10 @@ public async Task<IActionResult> Registrar()
                 // FECHA
                 // ==================================================
 
-                c.Fecha = c.Fecha.Date;
+                c.Fecha =
+                    c.Fecha.Date;
 
-                // Nunca permitir fechas anteriores a hoy
+
                 if (c.Fecha < DateTime.Today)
                 {
                     TempData["Error"] =
@@ -246,11 +215,12 @@ public async Task<IActionResult> Registrar()
 
 
                 // ==================================================
-                // USUARIO LOGUEADO
+                // USUARIO
                 // ==================================================
 
                 var usuarioId =
                     User.FindFirst("Id_Usuario")?.Value;
+
 
                 if (string.IsNullOrWhiteSpace(usuarioId))
                 {
@@ -266,12 +236,13 @@ public async Task<IActionResult> Registrar()
                     return View(c);
                 }
 
+
                 c.Id_Usuario =
                     Convert.ToInt64(usuarioId);
 
 
                 // ==================================================
-                // VALIDAR MÉDICO
+                // MEDICO
                 // ==================================================
 
                 if (c.Id_Medico <= 0)
@@ -290,7 +261,7 @@ public async Task<IActionResult> Registrar()
 
 
                 // ==================================================
-                // VALIDAR PACIENTE
+                // PACIENTE
                 // ==================================================
 
                 if (c.Id_Paciente <= 0)
@@ -309,7 +280,7 @@ public async Task<IActionResult> Registrar()
 
 
                 // ==================================================
-                // VALIDAR HORA
+                // HORA
                 // ==================================================
 
                 if (c.Hora == TimeSpan.Zero)
@@ -328,19 +299,37 @@ public async Task<IActionResult> Registrar()
 
 
                 // ==================================================
-                // VALIDAR HORARIO REAL DEL MÉDICO
+                // VALIDAR HORARIO
                 // ==================================================
 
-                bool atiende =
-                    await _service.MedicoAtiendeEnHorarioAsync(
+                var motivoHorario =
+                    await _service.ValidarHorarioCitaAsync(
                         c.Id_Medico,
                         c.Fecha,
                         c.Hora);
 
-                if (!atiende)
+
+                if (motivoHorario != null)
                 {
                     TempData["Error"] =
-                        "El médico no atiende en el horario seleccionado o la hora ya está ocupada.";
+                        motivoHorario switch
+                        {
+                            "MEDICO_NO_ATIENDE_DIA" =>
+                                "El médico no tiene horario de atención para el día seleccionado.",
+
+                            "HORA_FUERA_HORARIO" =>
+                                "La hora seleccionada está fuera del horario de atención del médico.",
+
+                            "HORA_YA_PASO" =>
+                                "La hora seleccionada ya pasó. Debe seleccionar una hora futura.",
+
+                            "HORA_OCUPADA" =>
+                                "La hora seleccionada ya está ocupada. Seleccione otra hora disponible.",
+
+                            _ =>
+                                "La hora seleccionada no está disponible."
+                        };
+
 
                     ViewBag.Pacientes =
                         _pacienteservice.ListarTodosPaciente();
@@ -353,11 +342,12 @@ public async Task<IActionResult> Registrar()
 
 
                 // ==================================================
-                // REGISTRAR CITA
+                // REGISTRAR
                 // ==================================================
 
                 var msg =
                     await _service.RegistrarAsync(c);
+
 
                 if (msg == "OK")
                 {
@@ -370,11 +360,14 @@ public async Task<IActionResult> Registrar()
                     TempData["Success"] =
                         "Cita registrada correctamente.";
 
-                    return RedirectToAction(nameof(Listar));
+                    return RedirectToAction(
+                        nameof(Listar)
+                    );
                 }
 
 
-                TempData["Error"] = msg;
+                TempData["Error"] =
+                    msg;
 
                 ViewBag.Pacientes =
                     _pacienteservice.ListarTodosPaciente();
@@ -401,19 +394,20 @@ public async Task<IActionResult> Registrar()
 
 
         // ==========================================================
-        // HORAS DISPONIBLES PARA MÉDICO + FECHA
+        // HORAS DISPONIBLES
         // ==========================================================
 
         [HttpGet]
         public async Task<IActionResult> HorasDisponibles(
             int idMedico,
-            DateTime fecha)
+            DateTime fecha,
+            int idCita = 0)
         {
             try
             {
-                // ------------------------------------------
-                // VALIDACIONES
-                // ------------------------------------------
+                // ==================================================
+                // VALIDAR MEDICO
+                // ==================================================
 
                 if (idMedico <= 0)
                 {
@@ -425,7 +419,17 @@ public async Task<IActionResult> Registrar()
                 }
 
 
-                fecha = fecha.Date;
+                // ==================================================
+                // NORMALIZAR FECHA
+                // ==================================================
+
+                fecha =
+                    fecha.Date;
+
+
+                // ==================================================
+                // FECHA ANTERIOR
+                // ==================================================
 
                 if (fecha < DateTime.Today)
                 {
@@ -438,21 +442,23 @@ public async Task<IActionResult> Registrar()
                 }
 
 
-                // ------------------------------------------
-                // DÍA DE LA SEMANA
-                // ------------------------------------------
+                // ==================================================
+                // DIA DE SEMANA
+                // ==================================================
 
                 var diaSemana =
                     DIaSemanaHelper.FromDateTime(fecha);
 
 
-                // ------------------------------------------
-                // HORARIOS DEL MÉDICO
-                // ------------------------------------------
+                // ==================================================
+                // HORARIOS DEL MEDICO
+                // ==================================================
 
                 var horarios =
                     await _medicoservice
-                        .ObtenerHorariosPorMedicoAsync(idMedico);
+                        .ObtenerHorariosPorMedicoAsync(
+                            idMedico);
+
 
                 var horariosDelDia =
                     horarios
@@ -461,8 +467,14 @@ public async Task<IActionResult> Registrar()
                             h.Dia_Semana.Value == diaSemana &&
                             h.Horario_Entrada.HasValue &&
                             h.Horario_Salida.HasValue)
-                        .OrderBy(h => h.Horario_Entrada)
+                        .OrderBy(h =>
+                            h.Horario_Entrada)
                         .ToList();
+
+
+                // ==================================================
+                // SIN HORARIO
+                // ==================================================
 
                 if (!horariosDelDia.Any())
                 {
@@ -473,35 +485,59 @@ public async Task<IActionResult> Registrar()
                         mensaje =
                             "El médico no tiene horario de atención para este día.",
 
-                        horas = Array.Empty<string>()
+                        horas =
+                            Array.Empty<string>()
                     });
                 }
 
 
-                // ------------------------------------------
-                // CITAS YA OCUPADAS
-                // ------------------------------------------
-
-                var ocupadas =
-                    await _service.HorariosOcupadosAsync(
-                        idMedico,
-                        fecha);
-
-                var horasOcupadas =
-                    ocupadas
-                        .Select(x => x.Hora)
-                        .ToHashSet();
-
-
-                // ------------------------------------------
-                // GENERAR HORAS DISPONIBLES
+                // ==================================================
+                // CITAS OCUPADAS
                 //
-                // La interfaz actual trabaja con bloques
-                // de una hora.
-                // ------------------------------------------
+                // Al editar:
+                // excluir la propia cita.
+                // ==================================================
+
+                HashSet<TimeSpan> horasOcupadas;
+
+
+                if (idCita > 0)
+                {
+                    horasOcupadas =
+                        await _context.Cita
+                            .Where(c =>
+                                c.Id_Medico == idMedico &&
+                                c.Fecha.Date == fecha.Date &&
+                                c.Id_Cita != idCita &&
+                                c.Estado != EstadoCita.CANCELADO)
+                            .Select(c => c.Hora)
+                            .ToHashSetAsync();
+                }
+                else
+                {
+                    var ocupadas =
+                        await _service.HorariosOcupadosAsync(
+                            idMedico,
+                            fecha);
+
+
+                    horasOcupadas =
+                        ocupadas
+                            .Where(x =>
+                                x.Estado != EstadoCita.CANCELADO)
+                            .Select(x =>
+                                x.Hora)
+                            .ToHashSet();
+                }
+
+
+                // ==================================================
+                // GENERAR HORAS
+                // ==================================================
 
                 var horasDisponibles =
                     new List<string>();
+
 
                 foreach (var horario in horariosDelDia)
                 {
@@ -511,19 +547,42 @@ public async Task<IActionResult> Registrar()
                     var salida =
                         horario.Horario_Salida!.Value;
 
+
                     for (
                         var hora = inicio;
                         hora < salida;
-                        hora = hora.Add(TimeSpan.FromHours(1)))
+                        hora = hora.Add(
+                            TimeSpan.FromHours(1)))
                     {
+                        // ------------------------------------------
+                        // HORAS PASADAS
+                        // ------------------------------------------
+
+                        if (
+                            fecha.Date == DateTime.Today &&
+                            hora <= DateTime.Now.TimeOfDay)
+                        {
+                            continue;
+                        }
+
+
+                        // ------------------------------------------
+                        // HORAS OCUPADAS
+                        // ------------------------------------------
+
                         if (!horasOcupadas.Contains(hora))
                         {
                             horasDisponibles.Add(
-                                hora.ToString(@"hh\:mm"));
+                                hora.ToString(@"hh\:mm")
+                            );
                         }
                     }
                 }
 
+
+                // ==================================================
+                // ORDENAR / ELIMINAR DUPLICADOS
+                // ==================================================
 
                 horasDisponibles =
                     horasDisponibles
@@ -532,18 +591,26 @@ public async Task<IActionResult> Registrar()
                         .ToList();
 
 
-                // ------------------------------------------
+                // ==================================================
+                // MENSAJE
+                // ==================================================
+
+                var mensaje =
+                    horasDisponibles.Any()
+                        ? ""
+                        : fecha.Date == DateTime.Today
+                            ? "No hay horas disponibles para hoy. Las horas de atención ya pasaron o están ocupadas."
+                            : "No hay horas disponibles para esta fecha. Las horas de atención pueden estar ocupadas.";
+
+
+                // ==================================================
                 // RESPUESTA
-                // ------------------------------------------
+                // ==================================================
 
                 return Json(new
                 {
                     ok = true,
-
-                    mensaje = horasDisponibles.Any()
-                        ? ""
-                        : "No hay horas disponibles para esta fecha.",
-
+                    mensaje,
                     horas = horasDisponibles
                 });
             }
@@ -571,6 +638,7 @@ public async Task<IActionResult> Registrar()
                 var msg =
                     await _service.ActualizarAsync(c);
 
+
                 TempData[
                     msg == "OK"
                         ? "Success"
@@ -593,17 +661,16 @@ public async Task<IActionResult> Registrar()
                 $"Cita #{c.Id_Cita} actualizada"
             );
 
-            return RedirectToAction(nameof(Listar));
+
+            return RedirectToAction(
+                nameof(Listar)
+            );
         }
 
 
-        // =====================================================
-        // DESACTIVAR CITA
-        //
-        // NO SE ELIMINA DE LA BASE DE DATOS.
-        //
-        // Se cambia el estado a CANCELADO.
-        // =====================================================
+        // ==========================================================
+        // DESACTIVAR
+        // ==========================================================
 
         [HttpGet]
         public async Task<IActionResult> Desactivar(int id)
@@ -613,37 +680,35 @@ public async Task<IActionResult> Registrar()
                 var cita =
                     await _service.ObtenerPorIdAsync(id);
 
+
                 if (cita == null)
                 {
                     TempData["Error"] =
                         "Cita no encontrada";
 
-                    return RedirectToAction(nameof(Listar));
+                    return RedirectToAction(
+                        nameof(Listar)
+                    );
                 }
 
-
-                // ---------------------------------------------
-                // Solo se pueden desactivar citas pendientes
-                // ---------------------------------------------
 
                 if (cita.Estado != EstadoCita.PENDIENTE)
                 {
                     TempData["Error"] =
                         "Solo se pueden desactivar citas pendientes.";
 
-                    return RedirectToAction(nameof(Listar));
+                    return RedirectToAction(
+                        nameof(Listar)
+                    );
                 }
 
-
-                // ---------------------------------------------
-                // CAMBIO DE ESTADO
-                // ---------------------------------------------
 
                 var msg =
                     await _service.ActualizarEstadoAsync(
                         id,
                         EstadoCita.CANCELADO
                     );
+
 
                 TempData[
                     msg == "OK"
@@ -661,17 +726,16 @@ public async Task<IActionResult> Registrar()
             }
 
 
-            // ---------------------------------------------
-            // AUDITORÍA
-            // ---------------------------------------------
-
             await LogAsync(
                 "DESACTIVAR",
                 "CITAS",
                 $"Cita #{id} desactivada"
             );
 
-            return RedirectToAction(nameof(Listar));
+
+            return RedirectToAction(
+                nameof(Listar)
+            );
         }
 
 
@@ -686,13 +750,17 @@ public async Task<IActionResult> Registrar()
                 var cita =
                     await _service.ObtenerPorIdAsync(id);
 
+
                 if (cita == null)
                 {
                     TempData["Error"] =
                         "Cita no encontrada";
 
-                    return RedirectToAction(nameof(Listar));
+                    return RedirectToAction(
+                        nameof(Listar)
+                    );
                 }
+
 
                 return View(cita);
             }
@@ -701,7 +769,9 @@ public async Task<IActionResult> Registrar()
                 TempData["Error"] =
                     ex.Message;
 
-                return RedirectToAction(nameof(Listar));
+                return RedirectToAction(
+                    nameof(Listar)
+                );
             }
         }
 
@@ -717,12 +787,15 @@ public async Task<IActionResult> Registrar()
                 var cita =
                     await _service.ObtenerPorIdAsync(id);
 
+
                 if (cita == null)
                 {
                     TempData["Error"] =
                         "Cita no encontrada";
 
-                    return RedirectToAction(nameof(Listar));
+                    return RedirectToAction(
+                        nameof(Listar)
+                    );
                 }
 
 
@@ -731,7 +804,9 @@ public async Task<IActionResult> Registrar()
                     TempData["Error"] =
                         "Solo se pueden cancelar citas pendientes";
 
-                    return RedirectToAction(nameof(Listar));
+                    return RedirectToAction(
+                        nameof(Listar)
+                    );
                 }
 
 
@@ -740,6 +815,7 @@ public async Task<IActionResult> Registrar()
                         id,
                         EstadoCita.CANCELADO
                     );
+
 
                 TempData[
                     msg == "OK"
@@ -763,7 +839,10 @@ public async Task<IActionResult> Registrar()
                 $"Cita #{id} cancelada"
             );
 
-            return RedirectToAction(nameof(Listar));
+
+            return RedirectToAction(
+                nameof(Listar)
+            );
         }
 
 
@@ -775,35 +854,38 @@ public async Task<IActionResult> Registrar()
             EstadoCita estado)
         {
             var lista =
-                await _service.ListarPorEstadoAsync(estado);
+                await _service.ListarPorEstadoAsync(
+                    estado
+                );
 
-            return View("Listar", lista);
+            return View(
+                "Listar",
+                lista
+            );
         }
 
 
         // ==========================================================
         // PENDIENTES POR PACIENTE
-        //
-        // Este método se conserva porque puede ser utilizado
-        // por otras partes del sistema.
-        //
-        // IMPORTANTE:
-        // La búsqueda principal de Listar() NO utiliza este método,
-        // porque ahora debe consultar todos los estados.
         // ==========================================================
 
         public async Task<IActionResult> Pendientes(
             string dato)
         {
             var lista =
-                await _service.PendientesPorPacienteAsync(dato);
+                await _service.PendientesPorPacienteAsync(
+                    dato
+                );
 
-            return View("Listar", lista);
+            return View(
+                "Listar",
+                lista
+            );
         }
 
 
         // ==========================================================
-        // ACTUALIZAR ESTADOS AUTOMÁTICOS
+        // ACTUALIZAR ESTADOS AUTOMATICOS
         // ==========================================================
 
         public async Task<IActionResult> ActualizarEstados()
@@ -822,14 +904,18 @@ public async Task<IActionResult> Registrar()
                     ex.Message;
             }
 
-            return RedirectToAction(nameof(Listar));
+
+            return RedirectToAction(
+                nameof(Listar)
+            );
         }
 
 
         // ==========================================================
         // HORARIOS OCUPADOS
         //
-        // Utilizado por el modal de horarios.
+        // UTILIZADO POR:
+        // Ver horarios
         // ==========================================================
 
         [HttpGet]
@@ -837,42 +923,89 @@ public async Task<IActionResult> Registrar()
             int idMedico,
             DateTime fecha)
         {
-            var horarios =
-                await _medicoservice
-                    .ObtenerHorariosPorMedicoAsync(idMedico)
-                ?? new List<Horario>();
+            try
+            {
+                // ==================================================
+                // VALIDAR MEDICO
+                // ==================================================
 
-
-            var ocupadas =
-                await _context.Cita
-                    .Include(c => c.Paciente)
-                    .Where(c =>
-                        c.Id_Medico == idMedico &&
-                        c.Fecha.Date == fecha.Date)
-                    .OrderBy(c => c.Hora)
-                    .ToListAsync();
-
-
-            var vm =
-                new HorariosViewModel
+                if (idMedico <= 0)
                 {
-                    Horarios = horarios,
-                    Ocupadas = ocupadas
-                };
+                    return BadRequest(
+                        "Debe seleccionar un médico."
+                    );
+                }
 
 
-            return PartialView(
-                "_ModalHorarios",
-                vm);
+                // ==================================================
+                // NORMALIZAR FECHA
+                // ==================================================
+
+                fecha =
+                    fecha.Date;
+
+
+                // ==================================================
+                // HORARIOS DEL MEDICO
+                // ==================================================
+
+                var horarios =
+                    await _medicoservice
+                        .ObtenerHorariosPorMedicoAsync(
+                            idMedico)
+                    ?? new List<Horario>();
+
+
+                // ==================================================
+                // CITAS OCUPADAS
+                //
+                // CANCELADO NO BLOQUEA EL HORARIO
+                // ==================================================
+
+                var ocupadas =
+                    await _context.Cita
+                        .Include(c => c.Paciente)
+                        .Where(c =>
+                            c.Id_Medico == idMedico &&
+                            c.Fecha.Date == fecha.Date &&
+                            c.Estado != EstadoCita.CANCELADO)
+                        .OrderBy(c => c.Hora)
+                        .ToListAsync();
+
+
+                // ==================================================
+                // VIEW MODEL
+                // ==================================================
+
+                var vm =
+                    new HorariosViewModel
+                    {
+                        Horarios = horarios,
+                        Ocupadas = ocupadas
+                    };
+
+
+                // ==================================================
+                // PARTIAL
+                // ==================================================
+
+                return PartialView(
+                    "_ModalHorarios",
+                    vm
+                );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    500,
+                    ex.Message
+                );
+            }
         }
 
 
         // ==========================================================
         // BUSCAR CITA
-        //
-        // IMPORTANTE:
-        // También se modifica para que una búsqueda por paciente
-        // consulte TODAS las citas y no solamente PENDIENTES.
         // ==========================================================
 
         [HttpGet]
@@ -882,14 +1015,13 @@ public async Task<IActionResult> Registrar()
             List<Cita> lista;
 
 
-            texto = texto?.Trim();
+            texto =
+                texto?.Trim();
 
 
-            // =====================================================
+            // ==================================================
             // SIN TEXTO
-            //
-            // Por defecto se mantienen solamente pendientes.
-            // =====================================================
+            // ==================================================
 
             if (string.IsNullOrWhiteSpace(texto))
             {
@@ -898,6 +1030,7 @@ public async Task<IActionResult> Registrar()
                         EstadoCita.PENDIENTE
                     );
 
+
                 lista =
                     lista
                         .OrderBy(c => c.Fecha)
@@ -905,16 +1038,16 @@ public async Task<IActionResult> Registrar()
                         .ToList();
             }
 
-            // =====================================================
+
+            // ==================================================
             // CON TEXTO
-            //
-            // Buscar en TODAS las citas.
-            // =====================================================
+            // ==================================================
 
             else
             {
                 var todas =
                     await _service.ListarAsync();
+
 
                 lista =
                     todas
@@ -939,31 +1072,30 @@ public async Task<IActionResult> Registrar()
                                         StringComparison.OrdinalIgnoreCase)
                             )
                         )
-                        // PENDIENTE SIEMPRE PRIMERO
                         .OrderBy(c =>
                             c.Estado == EstadoCita.PENDIENTE
                                 ? 0
                                 : 1)
-
                         .ThenBy(c => c.Fecha)
-
                         .ThenBy(c => c.Hora)
-
                         .ToList();
             }
 
 
-            // =====================================================
-            // RESPUESTA JSON
-            // =====================================================
+            // ==================================================
+            // JSON
+            // ==================================================
 
             var resultado =
                 lista.Select(c => new
                 {
-                    idCita = c.Id_Cita,
+                    idCita =
+                        c.Id_Cita,
 
                     fecha =
-                        c.Fecha.ToString("dd/MM/yyyy"),
+                        c.Fecha.ToString(
+                            "dd/MM/yyyy"
+                        ),
 
                     hora =
                         c.Hora,
@@ -1013,10 +1145,12 @@ public async Task<IActionResult> Registrar()
                     .ObtenerHorariosPorMedicoAsync(
                         idMedico);
 
+
             var ocupadas =
                 await _service.HorariosOcupadosAsync(
                     idMedico,
-                    DateTime.Today);
+                    DateTime.Today
+                );
 
 
             var vm =
@@ -1029,7 +1163,8 @@ public async Task<IActionResult> Registrar()
 
             return PartialView(
                 "_ModalHorarios",
-                vm);
+                vm
+            );
         }
 
 
@@ -1044,14 +1179,20 @@ public async Task<IActionResult> Registrar()
             var cita =
                 await _service.ObtenerPorIdAsync(id);
 
+
             if (cita == null)
+            {
                 return NotFound();
+            }
 
 
-            // CARGAR DATOS PARA MODALES
+            // ==================================================
+            // DATOS PARA MODALES
+            // ==================================================
 
             ViewBag.Pacientes =
                 _pacienteservice.ListarTodosPaciente();
+
 
             ViewBag.Medicos =
                 await _medicoservice.ListarTodosAsync();
@@ -1067,42 +1208,70 @@ public async Task<IActionResult> Registrar()
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Editar(Cita c)
+        public async Task<IActionResult> Editar(
+            Cita c)
         {
             try
             {
-                // =========================================
-                // VALIDAR HORARIO DEL MÉDICO
-                // =========================================
+                // ==================================================
+                // NORMALIZAR FECHA
+                // ==================================================
 
-                bool atiende =
-                    await _service
-                        .MedicoAtiendeEnHorarioAsync(
-                            c.Id_Medico,
-                            c.Fecha,
-                            c.Hora
-                        );
+                c.Fecha =
+                    c.Fecha.Date;
 
 
-                if (!atiende)
+                // ==================================================
+                // VALIDAR HORARIO
+                //
+                // IMPORTANTE:
+                // Se pasa c.Id_Cita para excluir la propia cita.
+                // ==================================================
+
+                var motivoHorario =
+                    await _service.ValidarHorarioCitaAsync(
+                        c.Id_Medico,
+                        c.Fecha,
+                        c.Hora,
+                        c.Id_Cita
+                    );
+
+
+                if (motivoHorario != null)
                 {
                     TempData["Error"] =
-                        "El médico no atiende en ese horario";
+                        motivoHorario switch
+                        {
+                            "MEDICO_NO_ATIENDE_DIA" =>
+                                "El médico no tiene horario de atención para el día seleccionado.",
+
+                            "HORA_FUERA_HORARIO" =>
+                                "La hora seleccionada está fuera del horario de atención del médico.",
+
+                            "HORA_YA_PASO" =>
+                                "La hora seleccionada ya pasó. Debe seleccionar una hora futura.",
+
+                            "HORA_OCUPADA" =>
+                                "La hora seleccionada ya está ocupada. Seleccione otra hora disponible.",
+
+                            _ =>
+                                "La hora seleccionada no está disponible."
+                        };
 
 
-                    // =========================================
-                    // RECARGAR DATOS COMPLETOS
-                    // =========================================
+                    // ==================================================
+                    // RECUPERAR CITA ORIGINAL
+                    // ==================================================
 
                     var citaOriginal =
                         await _service
                             .ObtenerPorIdAsync(
-                                c.Id_Cita);
+                                c.Id_Cita
+                            );
+
 
                     if (citaOriginal != null)
                     {
-                        // SOLO ACTUALIZA FECHA Y HORA
-
                         citaOriginal.Fecha =
                             c.Fecha;
 
@@ -1114,22 +1283,29 @@ public async Task<IActionResult> Registrar()
                     }
 
 
+                    // ==================================================
+                    // RECARGAR MODALES
+                    // ==================================================
+
                     ViewBag.Pacientes =
                         _pacienteservice
                             .ListarTodosPaciente();
+
 
                     ViewBag.Medicos =
                         await _medicoservice
                             .ListarTodosAsync();
 
 
-                    return View(citaOriginal);
+                    return View(
+                        citaOriginal
+                    );
                 }
 
 
-                // =========================================
+                // ==================================================
                 // ACTUALIZAR
-                // =========================================
+                // ==================================================
 
                 var msg =
                     await _service
@@ -1147,7 +1323,8 @@ public async Task<IActionResult> Registrar()
 
 
                 return RedirectToAction(
-                    nameof(Listar));
+                    nameof(Listar)
+                );
             }
             catch (Exception ex)
             {
@@ -1155,10 +1332,16 @@ public async Task<IActionResult> Registrar()
                     ex.Message;
 
 
+                // ==================================================
+                // RECUPERAR CITA ORIGINAL
+                // ==================================================
+
                 var citaOriginal =
                     await _service
                         .ObtenerPorIdAsync(
-                            c.Id_Cita);
+                            c.Id_Cita
+                        );
+
 
                 if (citaOriginal != null)
                 {
@@ -1173,22 +1356,29 @@ public async Task<IActionResult> Registrar()
                 }
 
 
+                // ==================================================
+                // RECARGAR DATOS
+                // ==================================================
+
                 ViewBag.Pacientes =
                     _pacienteservice
                         .ListarTodosPaciente();
+
 
                 ViewBag.Medicos =
                     await _medicoservice
                         .ListarTodosAsync();
 
 
-                return View(citaOriginal);
+                return View(
+                    citaOriginal
+                );
             }
         }
 
 
         // ==========================================================
-        // AUDITORÍA
+        // AUDITORIA
         // ==========================================================
 
         private async Task LogAsync(
@@ -1198,7 +1388,9 @@ public async Task<IActionResult> Registrar()
         {
             if (
                 long.TryParse(
-                    User.FindFirstValue("Id_Usuario"),
+                    User.FindFirstValue(
+                        "Id_Usuario"
+                    ),
                     out var uid))
             {
                 await _historial.RegistrarAsync(

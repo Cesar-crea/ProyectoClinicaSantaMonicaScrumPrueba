@@ -123,3 +123,65 @@
         cursor: pointer;
     }
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const modalPacientes =
+            document.getElementById("modalPacientes");
+
+        if (!modalPacientes) {
+            return;
+        }
+
+        modalPacientes.addEventListener("click", function (event) {
+
+            const boton =
+                event.target.closest(".seleccionar-paciente");
+
+            if (!boton) {
+                return;
+            }
+
+            const id =
+                boton.dataset.id;
+
+            const nombre =
+                boton.dataset.nombre;
+
+            // =========================================
+            // COLOCAR ID DEL PACIENTE
+            // =========================================
+
+            const pacienteId =
+                document.getElementById("pacienteId");
+
+            if (pacienteId) {
+                pacienteId.value = id;
+            }
+
+            // =========================================
+            // MOSTRAR NOMBRE DEL PACIENTE
+            // =========================================
+
+            const pacienteNombre =
+                document.getElementById("pacienteNombre");
+
+            if (pacienteNombre) {
+                pacienteNombre.value = nombre;
+            }
+
+            // =========================================
+            // CERRAR MODAL
+            // =========================================
+
+            const modal =
+                bootstrap.Modal.getOrCreateInstance(
+                    modalPacientes
+                );
+
+            modal.hide();
+        });
+
+    });
+</script>
