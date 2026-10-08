@@ -1,0 +1,428 @@
+﻿
+@model IEnumerable<ProyectoSantaMonica_Cesar.Models.Medico>
+
+<div class="modal fade"
+     id="modalMedicos"
+     tabindex="-1"
+     aria-labelledby="modalMedicosLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+        <div class="modal-content">
+
+            <!-- ===================================================== -->
+            <!-- ENCABEZADO -->
+            <!-- ===================================================== -->
+
+            <div class="modal-header bg-primary text-white">
+
+                <h5 class="modal-title"
+                    id="modalMedicosLabel">
+
+                    <i class="bi bi-person-badge me-2"></i>
+
+                    Seleccionar Médico
+
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar">
+                </button>
+
+            </div>
+
+
+            <!-- ===================================================== -->
+            <!-- CUERPO -->
+            <!-- ===================================================== -->
+
+            <div class="modal-body">
+
+                <!-- BUSCADOR -->
+
+                <div class="mb-3">
+
+                    <label for="buscarMedico"
+                           class="form-label fw-semibold">
+
+                        Buscar médico
+
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text">
+
+                            <i class="bi bi-search"></i>
+
+                        </span>
+
+                        <input type="text"
+                               id="buscarMedico"
+                               class="form-control"
+                               placeholder="Buscar por nombre, apellido o especialidad..." />
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- TABLA DE MÉDICOS -->
+                <!-- ================================================= -->
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover table-bordered align-middle">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th>
+                                    Nombres
+                                </th>
+
+                                <th>
+                                    Apellidos
+                                </th>
+
+                                <th>
+                                    Especialidad
+                                </th>
+
+                                <th class="text-center">
+                                    Acción
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="tablaMedicos">
+
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var m in Model)
+                                {
+                                    var nombreCompleto =
+                                        $"{m.Nombres} {m.Apellidos}".Trim();
+
+                                    var especialidad =
+                                        string.IsNullOrWhiteSpace(m.Especialidad)
+                                            ? "Sin especialidad"
+                                            : m.Especialidad.Trim();
+
+                                    <tr class="fila-medico">
+
+                                        <!-- NOMBRE -->
+
+                                        <td>
+                                            @m.Nombres
+                                        </td>
+
+
+                                        <!-- APELLIDO -->
+
+                                        <td>
+                                            @m.Apellidos
+                                        </td>
+
+
+                                        <!-- ESPECIALIDAD -->
+
+                                        <td>
+
+                                            <span class="fw-semibold text-primary">
+
+                                                <i class="bi bi-heart-pulse me-1"></i>
+
+                                                @especialidad
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <!-- SELECCIONAR -->
+
+                                        <td class="text-center">
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-primary seleccionar-medico"
+                                                    data-id="@m.Id_Medico"
+                                                    data-nombre="@nombreCompleto"
+                                                    data-especialidad="@especialidad">
+
+                                                <i class="bi bi-check-circle me-1"></i>
+
+                                                Seleccionar
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+
+                                    <td colspan="4"
+                                        class="text-center text-muted py-4">
+
+                                        <i class="bi bi-info-circle me-1"></i>
+
+                                        No hay médicos registrados.
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            <!-- ===================================================== -->
+            <!-- PIE -->
+            <!-- ===================================================== -->
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    <i class="bi bi-x-circle me-1"></i>
+
+                    Cancelar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ============================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ============================================================= -->
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // =========================================================
+        // SELECCIONAR MÉDICO
+        // =========================================================
+
+        const modalMedicos =
+            document.getElementById("modalMedicos");
+
+        if (modalMedicos) {
+
+            modalMedicos.addEventListener(
+                "click",
+                function (event) {
+
+                    const boton =
+                        event.target.closest(".seleccionar-medico");
+
+                    if (!boton) {
+                        return;
+                    }
+
+
+                    // -------------------------------------------------
+                    // DATOS DEL MÉDICO
+                    // -------------------------------------------------
+
+                    const id =
+                        boton.dataset.id;
+
+                    const nombre =
+                        boton.dataset.nombre;
+
+                    const especialidad =
+                        boton.dataset.especialidad;
+
+
+                    // -------------------------------------------------
+                    // INPUT ID
+                    // -------------------------------------------------
+
+                    const medicoId =
+                        document.getElementById("medicoId");
+
+                    if (medicoId) {
+
+                        medicoId.value = id;
+
+                        // Avisar a Registrar.cshtml que cambió el médico
+
+                        medicoId.dispatchEvent(
+                            new Event("change", {
+                                bubbles: true
+                            })
+                        );
+
+                    }
+
+
+                    // -------------------------------------------------
+                    // INPUT NOMBRE + ESPECIALIDAD
+                    // -------------------------------------------------
+
+                    const medicoNombre =
+                        document.getElementById("medicoNombre");
+
+                    if (medicoNombre) {
+
+                        medicoNombre.value =
+                            `${nombre} — ${especialidad}`;
+
+                    }
+
+
+                    // -------------------------------------------------
+                    // MOTIVO AUTOMÁTICO
+                    // -------------------------------------------------
+
+                    const motivo =
+                        document.getElementById("Motivo");
+
+                    if (motivo) {
+
+                        const motivoActual =
+                            motivo.value.trim();
+
+                        const motivoAutomatico =
+                            `Consulta de: ${especialidad}`;
+
+
+                        // Solo colocar el motivo automáticamente
+                        // si está vacío.
+
+                        if (!motivoActual) {
+
+                            motivo.value =
+                                motivoAutomatico;
+
+                        }
+
+                    }
+
+
+                    // -------------------------------------------------
+                    // CERRAR MODAL
+                    // -------------------------------------------------
+
+                    const modal =
+                        bootstrap.Modal.getOrCreateInstance(
+                            modalMedicos
+                        );
+
+                    modal.hide();
+
+                }
+            );
+
+        }
+
+
+        // =========================================================
+        // BUSCADOR
+        // =========================================================
+
+        const buscarMedico =
+            document.getElementById("buscarMedico");
+
+        if (buscarMedico) {
+
+            buscarMedico.addEventListener(
+                "input",
+                function () {
+
+                    const texto =
+                        this.value
+                            .toLowerCase()
+                            .trim();
+
+                    const filas =
+                        document.querySelectorAll(
+                            "#tablaMedicos .fila-medico"
+                        );
+
+
+                    filas.forEach(function (fila) {
+
+                        const contenido =
+                            fila.textContent
+                                .toLowerCase();
+
+                        fila.style.display =
+                            contenido.includes(texto)
+                                ? ""
+                                : "none";
+
+                    });
+
+                }
+            );
+
+        }
+
+
+        // =========================================================
+        // LIMPIAR BUSCADOR AL ABRIR
+        // =========================================================
+
+        if (modalMedicos) {
+
+            modalMedicos.addEventListener(
+                "shown.bs.modal",
+                function () {
+
+                    if (buscarMedico) {
+
+                        buscarMedico.value = "";
+
+                        buscarMedico.focus();
+
+                    }
+
+
+                    const filas =
+                        document.querySelectorAll(
+                            "#tablaMedicos .fila-medico"
+                        );
+
+
+                    filas.forEach(function (fila) {
+
+                        fila.style.display = "";
+
+                    });
+
+                }
+            );
+
+        }
+
+    });
+
+</script>

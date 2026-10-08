@@ -1,0 +1,1228 @@
+﻿@model ProyectoSantaMonica_Cesar.Models.Cita
+
+@{
+    ViewData["Title"] = "Registrar Nueva Cita";
+
+    var hoy = DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>Registrar Nueva Cita</title>
+
+    <!-- ===================================================== -->
+    <!-- BOOTSTRAP -->
+    <!-- ===================================================== -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet" />
+
+    <!-- ===================================================== -->
+    <!-- BOOTSTRAP ICONS -->
+    <!-- ===================================================== -->
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+
+    <!-- ===================================================== -->
+    <!-- SWEETALERT -->
+    <!-- ===================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- ===================================================== -->
+    <!-- ESTILOS -->
+    <!-- ===================================================== -->
+
+    <style>
+
+        body {
+            background-color: #f5f7fa;
+        }
+
+        .container-cita {
+            max-width: 900px;
+            margin: 35px auto;
+        }
+
+        .header-bar {
+            background: #0d6efd;
+            color: white;
+            padding: 18px 24px;
+            border-radius: 12px 12px 0 0;
+        }
+
+            .header-bar h4 {
+                margin: 0;
+                font-weight: 600;
+            }
+
+        .card-form {
+            background: white;
+            padding: 30px;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, .08);
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+
+        .btn-ver-horarios {
+            background-color: #6f42c1;
+            color: white;
+            border: none;
+        }
+
+            .btn-ver-horarios:hover {
+                background-color: #59339d;
+                color: white;
+            }
+
+        .info-horario {
+            display: none;
+            margin-top: 8px;
+        }
+
+        .campo-seleccion {
+            background-color: #f8f9fa;
+        }
+
+            .campo-seleccion:focus {
+                background-color: #f8f9fa;
+            }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- ===================================================== -->
+    <!-- CONTENEDOR PRINCIPAL -->
+    <!-- ===================================================== -->
+
+    <div class="container-cita">
+
+        <!-- ================================================= -->
+        <!-- ENCABEZADO -->
+        <!-- ================================================= -->
+
+        <div class="header-bar">
+
+            <h4>
+                <i class="bi bi-calendar-plus me-2"></i>
+                Registrar Nueva Cita
+            </h4>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- FORMULARIO -->
+        <!-- ================================================= -->
+
+        <div class="card-form">
+
+            <form asp-action="Registrar"
+                  method="post"
+                  id="formRegistrarCita">
+
+                @Html.AntiForgeryToken()
+
+
+                <!-- ================================================= -->
+                <!-- PACIENTE -->
+                <!-- ================================================= -->
+
+                <div class="mb-4">
+
+                    <label class="form-label">
+                        Paciente
+                    </label>
+
+                    <div class="input-group">
+
+                        <!-- NOMBRE VISIBLE -->
+
+                        <input type="text"
+                               id="pacienteNombre"
+                               class="form-control campo-seleccion"
+                               readonly
+                               placeholder="Seleccionar paciente" />
+
+                        <!-- ID REAL QUE SE ENVÍA AL CONTROLLER -->
+
+                        <input type="hidden"
+                               asp-for="Id_Paciente"
+                               id="pacienteId" />
+
+                        <!-- BOTÓN BUSCAR -->
+
+                        <button type="button"
+                                class="btn btn-info"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalPacientes"
+                                title="Seleccionar paciente">
+
+                            <i class="bi bi-search"></i>
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- REGISTRAR NUEVO PACIENTE -->
+                    <!-- ================================================= -->
+
+                    <div class="text-center mt-2">
+
+                        <div class="text-muted small mb-1">
+                            ¿Paciente nuevo?
+                        </div>
+
+                        <a asp-controller="Paciente"
+                           asp-action="Create"
+                           class="btn btn-outline-primary btn-sm">
+
+                            <i class="bi bi-person-plus me-1"></i>
+
+                            Registrar Nuevo Paciente
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- MÉDICO -->
+                <!-- ================================================= -->
+
+                <div class="mb-4">
+
+                    <label class="form-label">
+                        Médico
+                    </label>
+
+                    <div class="input-group">
+
+                        <!-- ================================================= -->
+                        <!-- NOMBRE + ESPECIALIDAD -->
+                        <!-- ================================================= -->
+
+                        <input type="text"
+                               id="medicoNombre"
+                               class="form-control campo-seleccion"
+                               readonly
+                               placeholder="Seleccionar médico" />
+
+                        <!-- ================================================= -->
+                        <!-- ID REAL DEL MÉDICO -->
+                        <!-- ================================================= -->
+
+                        <input type="hidden"
+                               asp-for="Id_Medico"
+                               id="medicoId" />
+
+                        <!-- ================================================= -->
+                        <!-- BOTÓN SELECCIONAR -->
+                        <!-- ================================================= -->
+
+                        <button type="button"
+                                class="btn btn-info"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalMedicos"
+                                title="Seleccionar médico">
+
+                            <i class="bi bi-search"></i>
+
+                        </button>
+
+                    </div>
+
+                    <div class="form-text">
+
+                        Seleccione un médico para cargar sus horarios disponibles.
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- FECHA -->
+                <!-- ================================================= -->
+
+                <div class="mb-4">
+
+                    <label for="Fecha"
+                           class="form-label">
+
+                        Fecha
+
+                    </label>
+
+                    <input type="date"
+                           asp-for="Fecha"
+                           id="Fecha"
+                           class="form-control"
+                           min="@hoy"
+                           required />
+
+                    <div class="form-text">
+
+                        <i class="bi bi-info-circle me-1"></i>
+
+                        Las citas solo pueden registrarse desde hoy
+                        en adelante.
+
+                    </div>
+
+                    <span asp-validation-for="Fecha"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- HORA -->
+                <!-- ================================================= -->
+
+                <div class="mb-4">
+
+                    <label for="Hora"
+                           class="form-label">
+
+                        Hora
+
+                    </label>
+
+                    <select asp-for="Hora"
+                            id="Hora"
+                            class="form-select"
+                            required>
+
+                        <option value="">
+                            Seleccione primero médico y fecha
+                        </option>
+
+                    </select>
+
+                    <div id="mensajeHorario"
+                         class="form-text info-horario">
+                    </div>
+
+                    <span asp-validation-for="Hora"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- VER HORARIOS -->
+                <!-- ================================================= -->
+
+                <div class="mb-4 text-end">
+
+                    <button type="button"
+                            id="btnVerHorarios"
+                            class="btn btn-ver-horarios">
+
+                        <i class="bi bi-clock-history me-1"></i>
+
+                        Ver horarios
+
+                    </button>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- CONTENEDOR MODAL HORARIOS -->
+                <!-- ================================================= -->
+
+                <div id="modalHorariosContainer"></div>
+
+
+                <!-- ================================================= -->
+                <!-- MOTIVO -->
+                <!-- ================================================= -->
+
+                <div class="mb-4">
+
+                    <label asp-for="Motivo"
+                           class="form-label">
+
+                        Motivo de consulta
+
+                    </label>
+
+                    <textarea asp-for="Motivo"
+                              id="Motivo"
+                              class="form-control"
+                              rows="3"
+                              placeholder="Ingrese el motivo de la consulta..."></textarea>
+
+                    <span asp-validation-for="Motivo"
+                          class="text-danger">
+                    </span>
+
+                    <div class="form-text">
+
+                        El motivo se completa automáticamente al seleccionar
+                        el médico, pero puede ser modificado.
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- BOTONES -->
+                <!-- ================================================= -->
+
+                <div class="d-flex gap-2">
+
+                    <!-- CANCELAR -->
+
+                    <a asp-action="Listar"
+                       class="btn btn-secondary flex-fill">
+
+                        <i class="bi bi-arrow-left me-1"></i>
+
+                        Cancelar
+
+                    </a>
+
+
+                    <!-- REGISTRAR -->
+
+                    <button type="submit"
+                            id="btnRegistrar"
+                            class="btn btn-success flex-fill">
+
+                        <i class="bi bi-check-circle me-1"></i>
+
+                        Registrar Cita
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================= -->
+    <!-- MODAL SELECCIONAR MÉDICO -->
+    <!-- ============================================================= -->
+
+    <partial name="_ModalSeleccionarMedico"
+             model="ViewBag.Medicos" />
+
+
+    <!-- ============================================================= -->
+    <!-- MODAL SELECCIONAR PACIENTE -->
+    <!-- ============================================================= -->
+
+    <partial name="_ModalSeleccionarPaciente"
+             model="ViewBag.Pacientes" />
+
+
+    <!-- ============================================================= -->
+    <!-- BOOTSTRAP JAVASCRIPT -->
+    <!-- ============================================================= -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
+    <!-- ============================================================= -->
+    <!-- JAVASCRIPT DE REGISTRO DE CITA -->
+    <!-- ============================================================= -->
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // =========================================================
+            // ELEMENTOS
+            // =========================================================
+
+            const fechaInput =
+                document.getElementById("Fecha");
+
+            const medicoInput =
+                document.getElementById("medicoId");
+
+            const horaSelect =
+                document.getElementById("Hora");
+
+            const mensajeHorario =
+                document.getElementById("mensajeHorario");
+
+            const btnVerHorarios =
+                document.getElementById("btnVerHorarios");
+
+            const formRegistrar =
+                document.getElementById("formRegistrarCita");
+
+
+            // =========================================================
+            // FECHA ACTUAL DEL SERVIDOR
+            // =========================================================
+
+            const hoy = "@hoy";
+
+
+            if (fechaInput) {
+
+                fechaInput.min = hoy;
+
+                if (!fechaInput.value) {
+                    fechaInput.value = hoy;
+                }
+
+            }
+
+
+            // =========================================================
+            // MOSTRAR MENSAJE DE HORARIO
+            // =========================================================
+
+            function mostrarMensajeHorario(mensaje, tipo) {
+
+                if (!mensajeHorario) {
+                    return;
+                }
+
+                mensajeHorario.textContent = mensaje;
+
+                mensajeHorario.className =
+                    `form-text info-horario text-${tipo}`;
+
+                mensajeHorario.style.display = "block";
+            }
+
+
+            // =========================================================
+            // OCULTAR MENSAJE DE HORARIO
+            // =========================================================
+
+            function ocultarMensajeHorario() {
+
+                if (!mensajeHorario) {
+                    return;
+                }
+
+                mensajeHorario.textContent = "";
+
+                mensajeHorario.style.display = "none";
+            }
+
+
+            // =========================================================
+            // CARGAR HORAS DISPONIBLES
+            // =========================================================
+
+            async function cargarHorasDisponibles() {
+
+                if (!medicoInput ||
+                    !fechaInput ||
+                    !horaSelect) {
+
+                    console.error(
+                        "No se encontraron los elementos necesarios para cargar horarios."
+                    );
+
+                    return;
+                }
+
+
+                const idMedico =
+                    medicoInput.value.trim();
+
+                const fecha =
+                    fechaInput.value;
+
+
+                // -----------------------------------------------------
+                // LIMPIAR SELECT
+                // -----------------------------------------------------
+
+                horaSelect.innerHTML = "";
+
+                horaSelect.disabled = true;
+
+
+                const opcionInicial =
+                    document.createElement("option");
+
+                opcionInicial.value = "";
+
+
+                // -----------------------------------------------------
+                // VALIDAR MÉDICO
+                // -----------------------------------------------------
+
+                if (!idMedico) {
+
+                    opcionInicial.textContent =
+                        "Seleccione primero un médico";
+
+                    horaSelect.appendChild(
+                        opcionInicial
+                    );
+
+                    ocultarMensajeHorario();
+
+                    return;
+                }
+
+
+                // -----------------------------------------------------
+                // VALIDAR FECHA
+                // -----------------------------------------------------
+
+                if (!fecha) {
+
+                    opcionInicial.textContent =
+                        "Seleccione una fecha";
+
+                    horaSelect.appendChild(
+                        opcionInicial
+                    );
+
+                    ocultarMensajeHorario();
+
+                    return;
+                }
+
+
+                // -----------------------------------------------------
+                // FECHA PASADA
+                // -----------------------------------------------------
+
+                if (fecha < hoy) {
+
+                    opcionInicial.textContent =
+                        "Fecha no válida";
+
+                    horaSelect.appendChild(
+                        opcionInicial
+                    );
+
+                    mostrarMensajeHorario(
+                        "No se pueden registrar citas anteriores a hoy.",
+                        "danger"
+                    );
+
+                    return;
+                }
+
+
+                // -----------------------------------------------------
+                // CARGANDO
+                // -----------------------------------------------------
+
+                opcionInicial.textContent =
+                    "Cargando horarios...";
+
+                horaSelect.appendChild(
+                    opcionInicial
+                );
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            `/Cita/HorasDisponibles?idMedico=${encodeURIComponent(idMedico)}&fecha=${encodeURIComponent(fecha)}`
+                        );
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            `Error HTTP ${response.status}`
+                        );
+
+                    }
+
+
+                    const data =
+                        await response.json();
+
+
+                    // -------------------------------------------------
+                    // ERROR DEL SERVIDOR
+                    // -------------------------------------------------
+
+                    if (!data.ok) {
+
+                        horaSelect.innerHTML = "";
+
+                        const opcionError =
+                            document.createElement("option");
+
+                        opcionError.value = "";
+
+                        opcionError.textContent =
+                            data.mensaje ||
+                            "No se pudieron obtener los horarios.";
+
+                        horaSelect.appendChild(
+                            opcionError
+                        );
+
+                        mostrarMensajeHorario(
+                            data.mensaje ||
+                            "No se pudieron obtener los horarios.",
+                            "danger"
+                        );
+
+                        return;
+                    }
+
+
+                    // -------------------------------------------------
+                    // SIN HORARIOS
+                    // -------------------------------------------------
+
+                    if (
+                        !data.horas ||
+                        data.horas.length === 0
+                    ) {
+
+                        horaSelect.innerHTML = "";
+
+                        const opcionSinHorarios =
+                            document.createElement("option");
+
+                        opcionSinHorarios.value = "";
+
+                        opcionSinHorarios.textContent =
+                            data.mensaje ||
+                            "No hay horarios disponibles para esta fecha.";
+
+                        horaSelect.appendChild(
+                            opcionSinHorarios
+                        );
+
+                        mostrarMensajeHorario(
+                            data.mensaje ||
+                            "No hay horarios disponibles para esta fecha.",
+                            "warning"
+                        );
+
+                        return;
+                    }
+
+
+                    // -------------------------------------------------
+                    // CARGAR HORAS
+                    // -------------------------------------------------
+
+                    horaSelect.innerHTML = "";
+
+
+                    const opcionSeleccion =
+                        document.createElement("option");
+
+                    opcionSeleccion.value = "";
+
+                    opcionSeleccion.textContent =
+                        "Seleccione una hora";
+
+                    horaSelect.appendChild(
+                        opcionSeleccion
+                    );
+
+
+                    data.horas.forEach(function (hora) {
+
+                        const option =
+                            document.createElement("option");
+
+                        option.value = hora;
+
+                        option.textContent = hora;
+
+                        horaSelect.appendChild(
+                            option
+                        );
+
+                    });
+
+
+                    horaSelect.disabled = false;
+
+
+                    // -------------------------------------------------
+                    // MENSAJE
+                    // -------------------------------------------------
+
+                    mostrarMensajeHorario(
+                        `${data.horas.length} horario(s) disponible(s).`,
+                        "success"
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "Error cargando horarios:",
+                        error
+                    );
+
+
+                    horaSelect.innerHTML = "";
+
+
+                    const opcionError =
+                        document.createElement("option");
+
+                    opcionError.value = "";
+
+                    opcionError.textContent =
+                        "No se pudieron cargar los horarios";
+
+                    horaSelect.appendChild(
+                        opcionError
+                    );
+
+
+                    mostrarMensajeHorario(
+                        "No se pudieron cargar los horarios del médico.",
+                        "danger"
+                    );
+
+                }
+
+            }
+
+
+            // =========================================================
+            // CAMBIO DE FECHA
+            // =========================================================
+
+            if (fechaInput) {
+
+                fechaInput.addEventListener(
+                    "change",
+                    function () {
+
+                        if (this.value < hoy) {
+
+                            Swal.fire(
+                                "Fecha no válida",
+                                "No puede seleccionar una fecha anterior a hoy.",
+                                "warning"
+                            );
+
+                            this.value = hoy;
+                        }
+
+                        cargarHorasDisponibles();
+
+                    }
+                );
+
+            }
+
+
+            // =========================================================
+            // CAMBIO DE MÉDICO
+            // =========================================================
+            //
+            // IMPORTANTE:
+            //
+            // _ModalSeleccionarMedico.cshtml es quien selecciona
+            // al médico.
+            //
+            // Ese modal establece:
+            //
+            // medicoId.value = ID
+            //
+            // y dispara:
+            //
+            // medicoId.dispatchEvent(new Event("change"))
+            //
+            // Este archivo solamente escucha ese cambio.
+            // =========================================================
+
+            if (medicoInput) {
+
+                medicoInput.addEventListener(
+                    "change",
+                    cargarHorasDisponibles
+                );
+
+            }
+
+
+            // =========================================================
+            // VER HORARIOS
+            // =========================================================
+
+            if (btnVerHorarios) {
+
+                btnVerHorarios.addEventListener(
+                    "click",
+                    function () {
+
+                        const idMedico =
+                            medicoInput?.value.trim();
+
+                        const fecha =
+                            fechaInput?.value;
+
+
+                        // -------------------------------------------------
+                        // MÉDICO
+                        // -------------------------------------------------
+
+                        if (!idMedico) {
+
+                            Swal.fire(
+                                "Médico requerido",
+                                "Seleccione un médico primero.",
+                                "warning"
+                            );
+
+                            return;
+                        }
+
+
+                        // -------------------------------------------------
+                        // FECHA
+                        // -------------------------------------------------
+
+                        if (!fecha) {
+
+                            Swal.fire(
+                                "Fecha requerida",
+                                "Seleccione una fecha primero.",
+                                "warning"
+                            );
+
+                            return;
+                        }
+
+
+                        // -------------------------------------------------
+                        // FECHA PASADA
+                        // -------------------------------------------------
+
+                        if (fecha < hoy) {
+
+                            Swal.fire(
+                                "Fecha no válida",
+                                "No puede consultar horarios de fechas anteriores a hoy.",
+                                "warning"
+                            );
+
+                            return;
+                        }
+
+
+                        mostrarHorarios(
+                            idMedico,
+                            fecha
+                        );
+
+                    }
+                );
+
+            }
+
+
+            // =========================================================
+            // MOSTRAR MODAL DE HORARIOS
+            // =========================================================
+
+            async function mostrarHorarios(
+                idMedico,
+                fecha
+            ) {
+
+                try {
+
+                    const response =
+                        await fetch(
+                            `/Cita/HorariosOcupados?idMedico=${encodeURIComponent(idMedico)}&fecha=${encodeURIComponent(fecha)}`
+                        );
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            `Error HTTP ${response.status}`
+                        );
+
+                    }
+
+
+                    const html =
+                        await response.text();
+
+
+                    const container =
+                        document.getElementById(
+                            "modalHorariosContainer"
+                        );
+
+
+                    if (!container) {
+
+                        throw new Error(
+                            "No existe #modalHorariosContainer."
+                        );
+
+                    }
+
+
+                    container.innerHTML =
+                        html;
+
+
+                    const modalElement =
+                        document.getElementById(
+                            "modalHorarios"
+                        );
+
+
+                    if (!modalElement) {
+
+                        Swal.fire(
+                            "Error",
+                            "No se pudo cargar el modal de horarios.",
+                            "error"
+                        );
+
+                        return;
+                    }
+
+
+                    const modal =
+                        bootstrap.Modal.getOrCreateInstance(
+                            modalElement
+                        );
+
+
+                    modal.show();
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "Error al cargar horarios:",
+                        error
+                    );
+
+
+                    Swal.fire(
+                        "Error",
+                        "No se pudieron cargar los horarios.",
+                        "error"
+                    );
+
+                }
+
+            }
+
+
+            // =========================================================
+            // CARGA INICIAL
+            // =========================================================
+
+            if (
+                medicoInput &&
+                medicoInput.value
+            ) {
+
+                cargarHorasDisponibles();
+
+            }
+
+
+            // =========================================================
+            // VALIDACIÓN FINAL DEL FORMULARIO
+            // =========================================================
+
+            if (formRegistrar) {
+
+                formRegistrar.addEventListener(
+                    "submit",
+                    function (event) {
+
+                        const fecha =
+                            document.getElementById("Fecha")?.value;
+
+                        const hora =
+                            document.getElementById("Hora")?.value;
+
+                        const medico =
+                            document.getElementById("medicoId")?.value;
+
+                        const paciente =
+                            document.getElementById("pacienteId")?.value;
+
+
+                        // -------------------------------------------------
+                        // PACIENTE
+                        // -------------------------------------------------
+
+                        if (!paciente) {
+
+                            event.preventDefault();
+
+                            Swal.fire(
+                                "Paciente requerido",
+                                "Debe seleccionar un paciente.",
+                                "warning"
+                            );
+
+                            return;
+                        }
+
+
+                        // -------------------------------------------------
+                        // MÉDICO
+                        // -------------------------------------------------
+
+                        if (!medico) {
+
+                            event.preventDefault();
+
+                            Swal.fire(
+                                "Médico requerido",
+                                "Debe seleccionar un médico.",
+                                "warning"
+                            );
+
+                            return;
+                        }
+
+
+                        // -------------------------------------------------
+                        // FECHA
+                        // -------------------------------------------------
+
+                        if (!fecha) {
+
+                            event.preventDefault();
+
+                            Swal.fire(
+                                "Fecha requerida",
+                                "Debe seleccionar una fecha.",
+                                "warning"
+                            );
+
+                            return;
+                        }
+
+
+                        // -------------------------------------------------
+                        // FECHA PASADA
+                        // -------------------------------------------------
+
+                        if (fecha < hoy) {
+
+                            event.preventDefault();
+
+                            Swal.fire(
+                                "Fecha no válida",
+                                "No se pueden registrar citas anteriores a hoy.",
+                                "error"
+                            );
+
+                            return;
+                        }
+
+
+                        // -------------------------------------------------
+                        // HORA
+                        // -------------------------------------------------
+
+                        if (!hora) {
+
+                            event.preventDefault();
+
+                            Swal.fire(
+                                "Hora requerida",
+                                "Debe seleccionar una hora disponible.",
+                                "warning"
+                            );
+
+                            return;
+                        }
+
+                    }
+                );
+
+            }
+
+        });
+
+    </script>
+
+
+    <!-- ============================================================= -->
+    <!-- MENSAJES TEMPDATA -->
+    <!-- ============================================================= -->
+    @if (TempData["Success"] != null)
+    {
+        <script>
+
+            Swal.fire(
+                "Éxito",
+            @Html.Raw(
+                         System.Text.Json.JsonSerializer.Serialize(
+                             TempData["Success"]?.ToString()
+                         )
+                     ),
+                "success"
+            );
+
+        </script>
+    }
+
+
+    @if (TempData["Error"] != null)
+    {
+        <script>
+
+            Swal.fire(
+                "Error",
+            @Html.Raw(
+                         System.Text.Json.JsonSerializer.Serialize(
+                             TempData["Error"]?.ToString()
+                         )
+                     ),
+                "error"
+            );
+
+        </script>
+    }
+
+</body>
+
+</html>
+

@@ -1,0 +1,15 @@
+@model ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteFiltrosViewModel
+@{ ViewData["Title"]="Reportes"; Layout=User.IsInRole("ADMINISTRADOR")?"~/Views/Shared/_LayoutAdmin.cshtml":"~/Views/Shared/_LayoutRecepcionista.cshtml"; }
+<div class="container py-4">
+ <div class="p-3 mb-4" style="background:#203354;color:white"><h2 class="mb-0">Módulo de Reportes</h2><small>Citas y reportes de gestión</small></div>
+ <div class="card shadow-sm mb-4"><div class="card-body"><h5>Reporte de citas</h5><form method="get" class="row g-3" id="formReport">
+  <div class="col-md-3"><label class="form-label">Desde</label><input asp-for="Desde" type="date" class="form-control" required /></div>
+  <div class="col-md-3"><label class="form-label">Hasta</label><input asp-for="Hasta" type="date" class="form-control" required /></div>
+  <div class="col-md-3"><label class="form-label">Médico</label><select asp-for="Id_Medico" class="form-select"><option value="">Todos</option>@foreach(var m in (IEnumerable<ProyectoSantaMonica_Cesar.Models.Medico>)ViewBag.Medicos){<option value="@m.Id_Medico">@m.Nombres @m.Apellidos</option>}</select></div>
+  <div class="col-md-3"><label class="form-label">Especialidad</label><select asp-for="Especialidad" class="form-select"><option value="">Todas</option>@foreach(var e in (string[])ViewBag.Especialidades){<option value="@e">@e</option>}</select></div>
+  <div class="col-md-3"><label class="form-label">Estado</label><select asp-for="Estado" class="form-select"><option value="">Todos</option>@foreach(var e in (string[])ViewBag.Estados){<option value="@e">@e</option>}</select></div>
+  <div class="col-12 d-flex gap-2"><button formaction="/Reportes/CitasPdf" class="btn btn-danger">PDF</button><button formaction="/Reportes/CitasExcel" class="btn btn-success">Excel</button></div>
+ </form></div></div>
+ @if(User.IsInRole("ADMINISTRADOR")){<div class="card shadow-sm mb-4"><div class="card-body"><h5>Reporte CMP - Administrador</h5><p class="text-muted">Listado de médicos, colegiatura CMP, especialidad y datos de contacto.</p><a class="btn btn-danger me-2" asp-action="CmpPdf">PDF</a><a class="btn btn-success" asp-action="CmpExcel">Excel</a></div></div>
+ <div class="card shadow-sm"><div class="card-body"><h5>Historial de usuarios</h5><p class="text-muted">Auditoría de acciones realizadas por usuarios autenticados.</p><a class="btn btn-outline-primary" asp-action="Historial">Consultar historial</a></div></div>}
+</div>

@@ -1,0 +1,49 @@
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Build
+[Bb]in/
+[Oo]bj/
+
+# Test results
+TestResults/
+[Tt]est[Rr]esult*/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# ASP.NET Core
+appsettings.Development.json
+
+# Rider / JetBrains
+.idea/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Coverage
+coverage/
+.coverage
+
+# Node
+node_modules/
+
+# Publish
+publish/

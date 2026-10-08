@@ -1,0 +1,3 @@
+@model IEnumerable<ProyectoSantaMonica_Cesar.Models.HistorialUsuario>
+@{ ViewData["Title"]="Historial de usuarios"; Layout="~/Views/Shared/_LayoutAdmin.cshtml"; }
+<div class="container py-4"><div class="p-3 mb-4" style="background:#203354;color:white"><h2>Historial de usuarios</h2><small>Auditoría de acciones</small></div><div class="table-responsive"><table class="table table-bordered table-striped"><thead><tr><th>Fecha</th><th>Usuario</th><th>Rol</th><th>Módulo</th><th>Acción</th><th>Descripción</th><th>IP</th></tr></thead><tbody>@foreach(var x in Model){<tr><td>@x.Fecha.ToString("dd/MM/yyyy HH:mm:ss")</td><td>@x.Usuario?.Username</td><td>@x.Usuario?.Rol</td><td>@x.Modulo</td><td>@x.Accion</td><td>@x.Descripcion</td><td>@x.Ip</td></tr>}</tbody></table></div></div>
