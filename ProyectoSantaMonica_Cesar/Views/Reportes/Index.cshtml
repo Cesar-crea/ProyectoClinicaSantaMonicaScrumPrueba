@@ -590,36 +590,27 @@
     @if (User.IsInRole("ADMINISTRADOR"))
     {
         <div class="card shadow-sm mb-4">
-
             <div class="card-body">
-
                 <h5>
+                    <i class="bi bi-person-badge"></i>
                     Reporte CMP - Administrador
                 </h5>
 
                 <p class="text-muted">
-                    Listado de médicos, colegiatura CMP,
-                    especialidad y datos de contacto.
+                    Consulta, filtra y exporta los datos de médicos,
+                    colegiatura CMP, DNI, especialidad y teléfono.
                 </p>
 
-                <a class="btn btn-danger me-2"
-                   asp-action="CmpPdf">
-
-                    PDF
-
+                <a asp-controller="Reportes"
+                   asp-action="Cmp"
+                   class="btn btn-primary">
+                    <i class="bi bi-search"></i>
+                    Consultar reporte CMP
                 </a>
-
-                <a class="btn btn-success"
-                   asp-action="CmpExcel">
-
-                    Excel
-
-                </a>
-
             </div>
-
         </div>
 
+        <!-- HISTORIAL DE USUARIOS -->
 
         <div class="card shadow-sm">
 
@@ -644,6 +635,38 @@
             </div>
 
         </div>
+
+        <!-- HISTORIAL DE COMPROBANTES DE PAGO -->
+        <div class="card shadow-sm mt-4">
+
+            <div class="card-body">
+
+                <h5>
+                    <i class="bi bi-receipt"></i>
+                    Historial de comprobantes de pago
+                </h5>
+
+                <p class="text-muted">
+                    Consulta los comprobantes emitidos, filtra por fechas,
+                    estado y método de pago, busca por datos del pagador
+                    y exporta los resultados a PDF o Excel.
+                </p>
+
+                <a asp-controller="Reportes"
+                   asp-action="HistorialComprobantes"
+                   class="btn btn-outline-primary">
+
+                    <i class="bi bi-search"></i>
+                    Consultar comprobantes
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+
     }
 
 </div>

@@ -1,0 +1,235 @@
+﻿@model ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteCmpFiltrosViewModel
+
+@{
+    ViewData["Title"] = "Reporte CMP";
+
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+
+    var resultados =
+        ViewBag.Resultados as IEnumerable<
+            ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteCmpRow>
+        ?? Enumerable.Empty<
+            ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteCmpRow>();
+
+    var especialidades =
+        ViewBag.Especialidades as IEnumerable<string>
+        ?? Enumerable.Empty<string>();
+
+    var totalRegistros = resultados.Count();
+
+    var registrosPorPagina = Model.RegistrosPorPagina is 10 or 25 or 50
+        ? Model.RegistrosPorPagina
+        : 10;
+
+    var totalPaginas = Math.Max(
+        1,
+        (int)Math.Ceiling(totalRegistros / (double)registrosPorPagina));
+
+    var pagina = Math.Clamp(Model.Pagina, 1, totalPaginas);
+
+    var registrosPagina = resultados
+        .Skip((pagina - 1) * registrosPorPagina)
+        .Take(registrosPorPagina)
+        .ToList();
+}
+
+<div class="container py-4">
+
+    <div class="p-3 mb-4" style="background:#203354;color:white">
+        <h2 class="mb-0">Reporte CMP - Administrador</h2>
+        <small>Consulta de médicos, colegiatura y datos de contacto</small>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">
+                <i class="bi bi-funnel"></i> Filtros del reporte
+            </h5>
+
+            <form method="get" asp-action="Cmp">
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label asp-for="Buscar" class="form-label">
+                            Buscar
+                        </label>
+                        <input asp-for="Buscar"
+                               class="form-control"
+                               placeholder="Médico, DNI, CMP, especialidad o teléfono" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="Especialidad" class="form-label">
+                            Especialidad
+                        </label>
+                        <select asp-for="Especialidad" class="form-select">
+                            <option value="">Todas</option>
+                            @foreach (var especialidad in especialidades)
+                            {
+                                <option value="@especialidad">
+                                    @especialidad
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="RegistrosPorPagina" class="form-label">
+                            Registros por página
+                        </label>
+                        <select asp-for="RegistrosPorPagina" class="form-select">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+
+                        <a asp-action="Cmp"
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            Limpiar
+                        </a>
+
+                        <a asp-action="Index"
+                           class="btn btn-outline-dark ms-auto">
+                            Volver a reportes
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <div class="d-flex flex-wrap justify-content-between
+                        align-items-center gap-2 mb-3">
+                <div>
+                    <h5 class="mb-1">Vista previa del reporte</h5>
+                    <span class="text-muted">
+                        Se encontraron <strong>@totalRegistros</strong> médicos.
+                    </span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <form method="get" asp-action="CmpPdf">
+                        <input type="hidden" name="Buscar" value="@Model.Buscar" />
+                        <input type="hidden" name="Especialidad"
+                               value="@Model.Especialidad" />
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                        </button>
+                    </form>
+
+                    <form method="get" asp-action="CmpExcel">
+                        <input type="hidden" name="Buscar" value="@Model.Buscar" />
+                        <input type="hidden" name="Especialidad"
+                               value="@Model.Especialidad" />
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            @if (registrosPagina.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID Médico</th>
+                                <th>Médico</th>
+                                <th>DNI</th>
+                                <th>CMP</th>
+                                <th>Especialidad</th>
+                                <th>Teléfono</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in registrosPagina)
+                            {
+                                <tr>
+                                    <td>@row.Id_Medico</td>
+                                    <td>@row.Medico</td>
+                                    <td>@row.Dni</td>
+                                    <td>@row.CMP</td>
+                                    <td>@row.Especialidad</td>
+                                    <td>@row.Telefono</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (totalPaginas > 1)
+                {
+                    <nav aria-label="Paginación del reporte CMP">
+                        <ul class="pagination justify-content-center">
+
+                            <li class="page-item @(pagina == 1 ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Cmp"
+                                   asp-route-Buscar="@Model.Buscar"
+                                   asp-route-Especialidad="@Model.Especialidad"
+                                   asp-route-RegistrosPorPagina="@registrosPorPagina"
+                                   asp-route-Pagina="@(pagina - 1)">
+                                    Anterior
+                                </a>
+                            </li>
+
+                            @for (var i = 1; i <= totalPaginas; i++)
+                            {
+                                <li class="page-item @(i == pagina ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-action="Cmp"
+                                       asp-route-Buscar="@Model.Buscar"
+                                       asp-route-Especialidad="@Model.Especialidad"
+                                       asp-route-RegistrosPorPagina="@registrosPorPagina"
+                                       asp-route-Pagina="@i">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(pagina == totalPaginas ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Cmp"
+                                   asp-route-Buscar="@Model.Buscar"
+                                   asp-route-Especialidad="@Model.Especialidad"
+                                   asp-route-RegistrosPorPagina="@registrosPorPagina"
+                                   asp-route-Pagina="@(pagina + 1)">
+                                    Siguiente
+                                </a>
+                            </li>
+
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">
+                    No se encontraron médicos con los filtros seleccionados.
+                </div>
+            }
+
+       
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-controller="Reportes"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Volver a reportes
+        </a>
+    </div>
+</div>

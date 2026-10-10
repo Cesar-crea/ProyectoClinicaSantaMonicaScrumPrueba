@@ -1,0 +1,280 @@
+﻿ @model ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteComprobantePagoFiltrosViewModel
+
+@{
+    ViewData["Title"] = "Historial de comprobantes";
+
+    Layout = User.IsInRole("ADMINISTRADOR")
+        ? "~/Views/Shared/_LayoutAdmin.cshtml"
+        : "~/Views/Shared/_LayoutRecepcionista.cshtml";
+
+    var resultados =
+        ViewBag.Resultados as IEnumerable<ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteComprobantePagoRow>
+        ?? Enumerable.Empty<ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteComprobantePagoRow>();
+
+    int totalRegistros = ViewBag.TotalRegistros ?? 0;
+    int totalPaginas = ViewBag.TotalPaginas ?? 1;
+    int pagina = Model.Pagina < 1 ? 1 : Model.Pagina;
+
+    string fechaDesde = Model.Desde?.ToString("yyyy-MM-dd") ?? "";
+    string fechaHasta = Model.Hasta?.ToString("yyyy-MM-dd") ?? "";
+}
+
+<div class="container py-4">
+
+    <!-- ENCABEZADO -->
+    <div class="p-3 mb-4" style="background:#203354;color:white">
+        <h2 class="mb-0">
+            <i class="bi bi-receipt"></i>
+            Historial de comprobantes de pago
+        </h2>
+        <small>Consulta, filtrado y exportación de comprobantes</small>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h5 class="mb-3">
+                <i class="bi bi-funnel"></i>
+                Filtros de búsqueda
+            </h5>
+
+            <form method="get" asp-action="HistorialComprobantes">
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+                        <label asp-for="Desde" class="form-label">Fecha desde</label>
+                        <input asp-for="Desde" type="date" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="Hasta" class="form-label">Fecha hasta</label>
+                        <input asp-for="Hasta" type="date" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="Estado" class="form-label">Estado</label>
+                        <select asp-for="Estado" class="form-select">
+                            <option value="">Todos los estados</option>
+                            <option value="EMITIDO">EMITIDO</option>
+                            <option value="ANULADO">ANULADO</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="Metodo" class="form-label">Método de pago</label>
+                        <select asp-for="Metodo" class="form-select">
+                            <option value="">Todos los métodos</option>
+                            <option value="EFECTIVO">EFECTIVO</option>
+                            <option value="TARJETA">TARJETA</option>
+                            <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Buscar" class="form-label">Buscar</label>
+                        <input asp-for="Buscar"
+                               class="form-control"
+                               placeholder="Nombre, apellidos, DNI o código del comprobante" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="RegistrosPorPagina" class="form-label">Registros por página</label>
+                        <select asp-for="RegistrosPorPagina" class="form-select">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+
+                    <input type="hidden" name="Pagina" value="1" />
+
+                    <div class="col-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i>
+                            Buscar
+                        </button>
+
+                        <a asp-action="HistorialComprobantes"
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            Limpiar
+                        </a>
+
+                 
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h5 class="mb-1">Comprobantes encontrados</h5>
+                    <span class="text-muted">
+                        Total de registros: <strong>@totalRegistros</strong>
+                    </span>
+                </div>
+
+                @if (totalRegistros > 0)
+                {
+                    <div class="d-flex gap-2">
+
+                        <form method="get" asp-action="HistorialComprobantesPdf">
+                            <input type="hidden" name="Desde" value="@fechaDesde" />
+                            <input type="hidden" name="Hasta" value="@fechaHasta" />
+                            <input type="hidden" name="Estado" value="@Model.Estado" />
+                            <input type="hidden" name="Metodo" value="@Model.Metodo" />
+                            <input type="hidden" name="Buscar" value="@Model.Buscar" />
+
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                PDF
+                            </button>
+                        </form>
+
+                        <form method="get" asp-action="HistorialComprobantesExcel">
+                            <input type="hidden" name="Desde" value="@fechaDesde" />
+                            <input type="hidden" name="Hasta" value="@fechaHasta" />
+                            <input type="hidden" name="Estado" value="@Model.Estado" />
+                            <input type="hidden" name="Metodo" value="@Model.Metodo" />
+                            <input type="hidden" name="Buscar" value="@Model.Buscar" />
+
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-file-earmark-excel"></i>
+                                Excel
+                            </button>
+                        </form>
+
+                    </div>
+                }
+            </div>
+
+            @if (resultados.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Código</th>
+                                <th>Pagador</th>
+                                <th>Apellidos</th>
+                                <th>DNI</th>
+                                <th>Fecha de emisión</th>
+                                <th>Monto</th>
+                                <th>Método de pago</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var row in resultados)
+                            {
+                                <tr>
+                                    <td>@row.Id_Comprobante</td>
+                                    <td>@row.Nombre</td>
+                                    <td>@row.Apellidos</td>
+                                    <td>@row.Dni</td>
+                                    <td>@row.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>S/ @row.Monto.ToString("N2")</td>
+                                    <td>@row.Metodo</td>
+                                    <td>
+                                        @{
+                                            var claseEstado = row.Estado.ToUpperInvariant() switch
+                                            {
+                                                "EMITIDO" => "bg-success",
+                                                "ANULADO" => "bg-danger",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+
+                                        <span class="badge @claseEstado">
+                                            @row.Estado
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINACIÓN -->
+                @if (totalPaginas > 1)
+                {
+                    <nav aria-label="Paginación de comprobantes">
+                        <ul class="pagination justify-content-center">
+
+                            <li class="page-item @(pagina <= 1 ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="HistorialComprobantes"
+                                   asp-route-Desde="@fechaDesde"
+                                   asp-route-Hasta="@fechaHasta"
+                                   asp-route-Estado="@Model.Estado"
+                                   asp-route-Metodo="@Model.Metodo"
+                                   asp-route-Buscar="@Model.Buscar"
+                                   asp-route-RegistrosPorPagina="@Model.RegistrosPorPagina"
+                                   asp-route-Pagina="@(pagina - 1)">
+                                    Anterior
+                                </a>
+                            </li>
+
+                            @for (int i = 1; i <= totalPaginas; i++)
+                            {
+                                <li class="page-item @(i == pagina ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-action="HistorialComprobantes"
+                                       asp-route-Desde="@fechaDesde"
+                                       asp-route-Hasta="@fechaHasta"
+                                       asp-route-Estado="@Model.Estado"
+                                       asp-route-Metodo="@Model.Metodo"
+                                       asp-route-Buscar="@Model.Buscar"
+                                       asp-route-RegistrosPorPagina="@Model.RegistrosPorPagina"
+                                       asp-route-Pagina="@i">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(pagina >= totalPaginas ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="HistorialComprobantes"
+                                   asp-route-Desde="@fechaDesde"
+                                   asp-route-Hasta="@fechaHasta"
+                                   asp-route-Estado="@Model.Estado"
+                                   asp-route-Metodo="@Model.Metodo"
+                                   asp-route-Buscar="@Model.Buscar"
+                                   asp-route-RegistrosPorPagina="@Model.RegistrosPorPagina"
+                                   asp-route-Pagina="@(pagina + 1)">
+                                    Siguiente
+                                </a>
+                            </li>
+
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    No se encontraron comprobantes con los filtros seleccionados.
+                </div>
+            }
+
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-controller="Reportes"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Volver a reportes
+        </a>
+    </div>
+</div>

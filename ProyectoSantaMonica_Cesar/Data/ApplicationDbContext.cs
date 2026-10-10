@@ -16,7 +16,7 @@ namespace ProyectoSantaMonica_Cesar.Data
         public DbSet<Especialidad> Especialidad { get; set; }
         public DbSet<Horario> HorariosAtencion { get; set; }
         public DbSet<Cita> Cita { get; set; }
-        public DbSet<ComprobanteDePago> ComprobanteDePago { get; set; }
+        public DbSet<ReporteComprobantePagoRow> ComprobanteDePago { get; set; }
         public DbSet<HistorialUsuario> HistorialUsuario { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -74,7 +74,7 @@ namespace ProyectoSantaMonica_Cesar.Data
             // ================================
             // COMPROBANTE
             // ================================
-            modelBuilder.Entity<ComprobanteDePago>(entity =>
+            modelBuilder.Entity<ReporteComprobantePagoRow>(entity =>
             {
                 entity.ToTable("Comprobante_Pago");
 

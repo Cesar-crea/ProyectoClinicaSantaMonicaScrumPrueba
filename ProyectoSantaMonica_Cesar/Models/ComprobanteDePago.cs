@@ -4,7 +4,7 @@ using ProyectoSantaMonica_Cesar.Models.enums;
 
 namespace ProyectoSantaMonica_Cesar.Models
 {
-    public class ComprobanteDePago
+    public class ReporteComprobantePagoRow
     {
 
         [Key]

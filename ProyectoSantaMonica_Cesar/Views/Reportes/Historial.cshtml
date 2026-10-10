@@ -1,3 +1,264 @@
-@model IEnumerable<ProyectoSantaMonica_Cesar.Models.HistorialUsuario>
-@{ ViewData["Title"]="Historial de usuarios"; Layout="~/Views/Shared/_LayoutAdmin.cshtml"; }
-<div class="container py-4"><div class="p-3 mb-4" style="background:#203354;color:white"><h2>Historial de usuarios</h2><small>Auditoría de acciones</small></div><div class="table-responsive"><table class="table table-bordered table-striped"><thead><tr><th>Fecha</th><th>Usuario</th><th>Rol</th><th>Módulo</th><th>Acción</th><th>Descripción</th><th>IP</th></tr></thead><tbody>@foreach(var x in Model){<tr><td>@x.Fecha.ToString("dd/MM/yyyy HH:mm:ss")</td><td>@x.Usuario?.Username</td><td>@x.Usuario?.Rol</td><td>@x.Modulo</td><td>@x.Accion</td><td>@x.Descripcion</td><td>@x.Ip</td></tr>}</tbody></table></div></div>
+@model ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteHistorialFiltrosViewModel
+
+@using System.Linq
+@using System.Collections.Generic
+@using ProyectoSantaMonica_Cesar.Models
+
+@{
+    ViewData["Title"] = "Historial de usuarios";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+
+    var resultados =
+        ViewBag.Resultados as IEnumerable<HistorialUsuario>
+        ?? Enumerable.Empty<HistorialUsuario>();
+
+    int totalRegistros = ViewBag.TotalRegistros ?? 0;
+    int totalPaginas = ViewBag.TotalPaginas ?? 1;
+    int pagina = Model.Pagina;
+}
+
+<div class="container py-4">
+
+    <div class="p-4 mb-4 rounded"
+         style="background:#203354;color:white">
+        <h2>
+            <i class="bi bi-clock-history"></i>
+            Historial de usuarios
+        </h2>
+        <p class="mb-0">
+            Consulta las acciones realizadas por los usuarios del sistema.
+        </p>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            <strong>Filtros de búsqueda</strong>
+        </div>
+
+        <div class="card-body">
+            <form asp-controller="Reportes"
+                  asp-action="Historial"
+                  method="get">
+
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+                        <label asp-for="IdUsuario" class="form-label">
+                            ID de usuario
+                        </label>
+                        <input asp-for="IdUsuario"
+                               type="number"
+                               min="1"
+                               class="form-control"
+                               placeholder="Todos los usuarios" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="Desde" class="form-label">
+                            Fecha desde
+                        </label>
+                        <input asp-for="Desde"
+                               type="date"
+                               class="form-control"
+                               asp-format="{0:yyyy-MM-dd}" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="Hasta" class="form-label">
+                            Fecha hasta
+                        </label>
+                        <input asp-for="Hasta"
+                               type="date"
+                               class="form-control"
+                               asp-format="{0:yyyy-MM-dd}" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="RegistrosPorPagina"
+                               class="form-label">
+                            Registros por página
+                        </label>
+                        <select asp-for="RegistrosPorPagina"
+                                class="form-select">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-9">
+                        <label asp-for="Buscar" class="form-label">
+                            Buscar
+                        </label>
+                        <input asp-for="Buscar"
+                               class="form-control"
+                               placeholder="Usuario, rol, módulo, acción, descripción o IP" />
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+
+                        <a asp-controller="Reportes"
+                           asp-action="Historial"
+                           class="btn btn-outline-secondary">
+                            Limpiar
+                        </a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between
+                    align-items-center flex-wrap gap-2">
+
+            <div>
+                <strong>Resultados del historial</strong>
+                <span class="badge bg-primary ms-2">
+                    Total: @totalRegistros
+                </span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-controller="Reportes"
+                   asp-action="HistorialPdf"
+                   asp-route-IdUsuario="@Model.IdUsuario"
+                   asp-route-Desde="@Model.Desde?.ToString("yyyy-MM-dd")"
+                   asp-route-Hasta="@Model.Hasta?.ToString("yyyy-MM-dd")"
+                   asp-route-Buscar="@Model.Buscar"
+                   class="btn btn-danger">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    Exportar PDF
+                </a>
+
+                <a asp-controller="Reportes"
+                   asp-action="HistorialExcel"
+                   asp-route-IdUsuario="@Model.IdUsuario"
+                   asp-route-Desde="@Model.Desde?.ToString("yyyy-MM-dd")"
+                   asp-route-Hasta="@Model.Hasta?.ToString("yyyy-MM-dd")"
+                   asp-route-Buscar="@Model.Buscar"
+                   class="btn btn-success">
+                    <i class="bi bi-file-earmark-excel"></i>
+                    Exportar Excel
+                </a>
+            </div>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped
+                              table-hover align-middle">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Cod.Hist</th>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                            <th>Módulo</th>
+                            <th>Acción</th>
+                            <th>Descripción</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (resultados.Any())
+                        {
+                            foreach (var x in resultados)
+                            {
+                                <tr>
+                                    <td>@x.Id_Historial</td>
+                                    <td>
+                                        @x.Fecha.ToString("dd/MM/yyyy HH:mm:ss")
+                                    </td>
+                                    <td>
+                                        @(x.Usuario?.Username
+                                            ?? $"Usuario ID {x.Id_Usuario}")
+                                    </td>
+                                    <td>@(x.Usuario != null ? x.Usuario.Rol.ToString() : "-")</td>
+                                    <td>@x.Modulo</td>
+                                    <td>@x.Accion</td>
+                                    <td>@(x.Descripcion ?? "-")</td>
+                                    <td>@(x.Ip ?? "-")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8"
+                                    class="text-center text-muted py-4">
+                                    No se encontraron registros con los
+                                    filtros seleccionados.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+
+                </table>
+            </div>
+
+            <!-- PAGINACIÓN -->
+            @if (totalPaginas > 1)
+            {
+                <nav aria-label="Paginación del historial">
+                    <ul class="pagination justify-content-center mt-3">
+
+                        <li class="page-item @(pagina <= 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Historial"
+                               asp-route-IdUsuario="@Model.IdUsuario"
+                               asp-route-Desde="@Model.Desde?.ToString("yyyy-MM-dd")"
+                               asp-route-Hasta="@Model.Hasta?.ToString("yyyy-MM-dd")"
+                               asp-route-Buscar="@Model.Buscar"
+                               asp-route-RegistrosPorPagina="@Model.RegistrosPorPagina"
+                               asp-route-Pagina="@(pagina - 1)">
+                                Anterior
+                            </a>
+                        </li>
+
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                Página @pagina de @totalPaginas
+                            </span>
+                        </li>
+
+                        <li class="page-item @(pagina >= totalPaginas ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Historial"
+                               asp-route-IdUsuario="@Model.IdUsuario"
+                               asp-route-Desde="@Model.Desde?.ToString("yyyy-MM-dd")"
+                               asp-route-Hasta="@Model.Hasta?.ToString("yyyy-MM-dd")"
+                               asp-route-Buscar="@Model.Buscar"
+                               asp-route-RegistrosPorPagina="@Model.RegistrosPorPagina"
+                               asp-route-Pagina="@(pagina + 1)">
+                                Siguiente
+                            </a>
+                        </li>
+
+                    </ul>
+                </nav>
+            }
+
+            <div class="mt-3">
+                <a asp-controller="Reportes"
+                   asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Volver a reportes
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</div>

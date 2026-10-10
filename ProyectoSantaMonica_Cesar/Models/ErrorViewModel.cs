@@ -1,6 +1,6 @@
 namespace ProyectoSantaMonica_Cesar.Models
 {
-    public class ErrorViewModel
+    public class ReporteCmpFiltrosViewModel
     {
         public string? RequestId { get; set; }
 

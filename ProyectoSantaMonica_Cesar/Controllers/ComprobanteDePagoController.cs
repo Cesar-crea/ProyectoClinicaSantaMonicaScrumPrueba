@@ -35,11 +35,11 @@ namespace ProyectoSantaMonica_Cesar.Controllers
 
         public IActionResult Registrar()
         {
-            return View(new ComprobanteDePago());
+            return View(new ReporteComprobantePagoRow());
         }
 
         [HttpPost]
-        public async Task<IActionResult> Registrar(ComprobanteDePago c)
+        public async Task<IActionResult> Registrar(ReporteComprobantePagoRow c)
         {
             try
             {

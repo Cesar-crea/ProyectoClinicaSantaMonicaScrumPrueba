@@ -4,12 +4,12 @@ namespace ProyectoSantaMonica_Cesar.Service.ComprobanteDePagoService
 {
     public interface IComprobanteDePagoService
     {
-        Task GuardarAsync(ComprobanteDePago c);
-        Task<List<ComprobanteDePago>> ListarAsync();
-        Task<List<ComprobanteDePago>> BuscarAsync(string dato);
+        Task GuardarAsync(ReporteComprobantePagoRow c);
+        Task<List<ReporteComprobantePagoRow>> ListarAsync();
+        Task<List<ReporteComprobantePagoRow>> BuscarAsync(string dato);
         Task AnularAsync(int id);
-        Task<ComprobanteDePago?> BuscarPorIdAsync(int id);
+        Task<ReporteComprobantePagoRow?> BuscarPorIdAsync(int id);
 
-        Task<List<ComprobanteDePago>> BuscarPorPacienteAsync(string dato);
+        Task<List<ReporteComprobantePagoRow>> BuscarPorPacienteAsync(string dato);
     }
 }

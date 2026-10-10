@@ -1,10 +1,11 @@
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProyectoSantaMonica_Cesar.Models
 {
     /// <summary>
-    /// Auditoría funcional de las acciones realizadas por los usuarios autenticados.
+    /// Auditoría de las acciones realizadas por los usuarios.
     /// </summary>
     [Table("Historial_Usuario")]
     public class HistorialUsuario

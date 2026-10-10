@@ -16,7 +16,7 @@ namespace ProyectoSantaMonica_Cesar.Repository
                     "No se encontró la cadena de conexión 'DefaultConnection'.");
         }
 
-        public async Task InsertarAsync(ComprobanteDePago c)
+        public async Task InsertarAsync(ReporteComprobantePagoRow c)
         {
             using SqlConnection cn = new SqlConnection(cadena);
             using SqlCommand cmd = new SqlCommand("sp_InsertarComprobante", cn);
@@ -34,9 +34,9 @@ namespace ProyectoSantaMonica_Cesar.Repository
             await cmd.ExecuteNonQueryAsync();
         }
 
-        public async Task<List<ComprobanteDePago>> ListarAsync()
+        public async Task<List<ReporteComprobantePagoRow>> ListarAsync()
         {
-            List<ComprobanteDePago> lista = new();
+            List<ReporteComprobantePagoRow> lista = new();
 
             using SqlConnection cn = new SqlConnection(cadena);
             using SqlCommand cmd = new SqlCommand("sp_ListarComprobantesDetallado", cn);
@@ -52,9 +52,9 @@ namespace ProyectoSantaMonica_Cesar.Repository
             return lista;
         }
 
-        public async Task<List<ComprobanteDePago>> BuscarAsync(string dato)
+        public async Task<List<ReporteComprobantePagoRow>> BuscarAsync(string dato)
         {
-            List<ComprobanteDePago> lista = new();
+            List<ReporteComprobantePagoRow> lista = new();
 
             using SqlConnection cn = new SqlConnection(cadena);
             using SqlCommand cmd = new SqlCommand("sp_BuscarComprobante", cn);
@@ -73,7 +73,7 @@ namespace ProyectoSantaMonica_Cesar.Repository
             return lista;
         }
 
-        public async Task<ComprobanteDePago?> BuscarPorIdAsync(int id)
+        public async Task<ReporteComprobantePagoRow?> BuscarPorIdAsync(int id)
         {
             using SqlConnection cn = new SqlConnection(cadena);
             using SqlCommand cmd = new SqlCommand("sp_BuscarComprobantePorId1", cn);
@@ -102,9 +102,9 @@ namespace ProyectoSantaMonica_Cesar.Repository
             await cmd.ExecuteNonQueryAsync();
         }
 
-        private ComprobanteDePago Mapear(SqlDataReader dr)
+        private ReporteComprobantePagoRow Mapear(SqlDataReader dr)
         {
-            return new ComprobanteDePago
+            return new ReporteComprobantePagoRow
             {
                 Id_Comprobante = (int)dr["Id_Comprobante"],
                 Id_Cita = (int)dr["Id_Cita"],
@@ -121,9 +121,9 @@ namespace ProyectoSantaMonica_Cesar.Repository
         }
 
 
-        private ComprobanteDePago Mapear1(SqlDataReader dr)
+        private ReporteComprobantePagoRow Mapear1(SqlDataReader dr)
         {
-            return new ComprobanteDePago
+            return new ReporteComprobantePagoRow
             {
                 Id_Comprobante = (int)dr["Id_Comprobante"],
                 Id_Cita = (int)dr["Id_Cita"],
@@ -159,9 +159,9 @@ namespace ProyectoSantaMonica_Cesar.Repository
             };
         }
 
-        public async Task<List<ComprobanteDePago>> BuscarPorPacienteAsync(string dato)
+        public async Task<List<ReporteComprobantePagoRow>> BuscarPorPacienteAsync(string dato)
         {
-            List<ComprobanteDePago> lista = new();
+            List<ReporteComprobantePagoRow> lista = new();
 
             using SqlConnection cn = new SqlConnection(cadena);
             using SqlCommand cmd = new SqlCommand("sp_BuscarComprobantePorPaciente", cn);
@@ -178,9 +178,9 @@ namespace ProyectoSantaMonica_Cesar.Repository
             return lista;
         }
 
-        private ComprobanteDePago MapearDetalle(SqlDataReader dr)
+        private ReporteComprobantePagoRow MapearDetalle(SqlDataReader dr)
         {
-            return new ComprobanteDePago
+            return new ReporteComprobantePagoRow
             {
                 Id_Comprobante = (int)dr["Id_Comprobante"],
                 Id_Cita = (int)dr["Id_Cita"],

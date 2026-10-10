@@ -454,6 +454,420 @@ namespace ProyectoSantaMonica_Cesar.Service.ReporteService
                     style => style.FontColor(Colors.White).Bold())
                 .AlignCenter();
         }
+
+        public async Task<List<ReporteComprobantePagoRow>> ObtenerComprobantesAsync(
+    ReporteComprobantePagoFiltrosViewModel filtros)
+        {
+            var query = _context.ComprobanteDePago
+                .AsNoTracking()
+                .Include(x => x.Cita)
+                    .ThenInclude(c => c!.Paciente)
+                .AsQueryable();
+
+            if (filtros.Desde.HasValue)
+                query = query.Where(x =>
+                    x.Fecha_Emision >= filtros.Desde.Value.Date);
+
+            if (filtros.Hasta.HasValue)
+            {
+                var hastaExclusivo = filtros.Hasta.Value.Date.AddDays(1);
+
+                query = query.Where(x =>
+                    x.Fecha_Emision < hastaExclusivo);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtros.Estado) &&
+                Enum.TryParse<EstadoComprobante>(
+                    filtros.Estado, true, out var estado))
+            {
+                query = query.Where(x => x.Estado == estado);
+            }
+
+            // FILTRO POR MÉTODO DE PAGO
+            if (!string.IsNullOrWhiteSpace(filtros.Metodo) &&
+                Enum.TryParse<MetodoPago>(
+                    filtros.Metodo.Trim(),
+                    true,
+                    out var metodo))
+            {
+                var metodoTexto = metodo.ToString();
+
+                query = query.Where(x => x.Metodo_Pago == metodoTexto);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtros.Buscar))
+            {
+                var buscar = filtros.Buscar.Trim();
+
+                query = query.Where(x =>
+                    x.Nombre_Pagador.Contains(buscar) ||
+                    x.Apellidos_Pagador.Contains(buscar) ||
+                    (x.Dni_Pagador != null &&
+                     x.Dni_Pagador.Contains(buscar)) ||
+                    x.Id_Comprobante.ToString().Contains(buscar));
+            }
+
+            return await query
+                // Regla principal: EMITIDO siempre antes que ANULADO.
+                .OrderBy(x => x.Estado == EstadoComprobante.EMITIDO ? 0 : 1)
+                // Regla secundaria: el más reciente primero.
+                .ThenByDescending(x => x.Fecha_Emision)
+                .ThenByDescending(x => x.Id_Comprobante)
+                .Select(x => new ReporteComprobantePagoRow
+                {
+                    Id_Comprobante = x.Id_Comprobante,
+                    Nombre = x.Nombre_Pagador,
+                    Apellidos = x.Apellidos_Pagador,
+                    Dni = x.Dni_Pagador ?? "",
+                    Fecha = x.Fecha_Emision,
+                    Monto = x.Monto,
+                    Metodo = x.Metodo_Pago.ToString(),
+                    Estado = x.Estado.ToString()
+                })
+                .ToListAsync();
+        }
+
+        public byte[] GenerarComprobantesExcel(
+     IReadOnlyCollection<ReporteComprobantePagoRow> rows)
+        {
+            using var workbook = new XLWorkbook();
+
+            var worksheet = workbook.Worksheets.Add("Historial de Pagos");
+
+            // Título del reporte
+            worksheet.Cell(1, 1).Value =
+                "CLÍNICA SANTA MÓNICA - HISTORIAL DE COMPROBANTES DE PAGO";
+
+            worksheet.Range(1, 1, 1, 8).Merge();
+            worksheet.Range(1, 1, 1, 8).Style.Font.SetBold();
+            worksheet.Range(1, 1, 1, 8).Style.Font.FontSize = 15;
+            worksheet.Range(1, 1, 1, 8).Style.Alignment.Horizontal =
+                XLAlignmentHorizontalValues.Center;
+
+            worksheet.Cell(2, 1).Value =
+                $"Fecha de generación: {DateTime.Now:dd/MM/yyyy HH:mm}";
+
+            worksheet.Range(2, 1, 2, 8).Merge();
+
+            // Encabezados
+            string[] headers =
+            {
+        "Nombre",
+        "Apellidos",
+        "DNI",
+        "Fecha",
+        "Monto",
+        "Método",
+        "Estado",
+        "ID CP"
+    };
+
+            for (int i = 0; i < headers.Length; i++)
+                worksheet.Cell(4, i + 1).Value = headers[i];
+
+            // Datos
+            int rowNumber = 5;
+
+            foreach (var row in rows)
+            {
+                worksheet.Cell(rowNumber, 1).Value = row.Nombre;
+                worksheet.Cell(rowNumber, 2).Value = row.Apellidos;
+                worksheet.Cell(rowNumber, 3).Value = row.Dni;
+
+                worksheet.Cell(rowNumber, 4).Value = row.Fecha;
+                worksheet.Cell(rowNumber, 4).Style.DateFormat.Format =
+                    "dd/MM/yyyy";
+
+                worksheet.Cell(rowNumber, 5).Value = row.Monto;
+                worksheet.Cell(rowNumber, 5).Style.NumberFormat.Format =
+                    "0.00";
+
+                worksheet.Cell(rowNumber, 6).Value = row.Metodo;
+                worksheet.Cell(rowNumber, 7).Value = row.Estado;
+                worksheet.Cell(rowNumber, 8).Value = row.Id_Comprobante;
+
+                rowNumber++;
+            }
+
+            // Estilo de encabezados
+            var headerRange = worksheet.Range(4, 1, 4, 8);
+
+            headerRange.Style.Font.SetBold();
+            headerRange.Style.Fill.SetBackgroundColor(
+                XLColor.FromHtml("#203354"));
+            headerRange.Style.Font.SetFontColor(XLColor.White);
+            headerRange.Style.Alignment.Horizontal =
+                XLAlignmentHorizontalValues.Center;
+
+            // Bordes y presentación
+            var usedRange = worksheet.Range(
+                4, 1, Math.Max(4, rowNumber - 1), 8);
+
+            usedRange.Style.Border.OutsideBorder =
+                XLBorderStyleValues.Thin;
+
+            usedRange.Style.Border.InsideBorder =
+                XLBorderStyleValues.Thin;
+
+            worksheet.Columns().AdjustToContents();
+            worksheet.SheetView.FreezeRows(4);
+            worksheet.RangeUsed().SetAutoFilter();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+
+            return stream.ToArray();
+        }
+
+        public byte[] GenerarComprobantesPdf(
+      IReadOnlyCollection<ReporteComprobantePagoRow> rows)
+        {
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(25);
+
+                    page.Header()
+                        .Column(column =>
+                        {
+                            column.Item()
+                                .Text("CLÍNICA SANTA MÓNICA")
+                                .Bold()
+                                .FontSize(18)
+                                .FontColor("203354");
+
+                            column.Item()
+                                .Text("Historial de Comprobante de Pago")
+                                .Bold()
+                                .FontSize(14);
+
+                            column.Item()
+                                .Text(
+                                    $"Fecha de generación: {DateTime.Now:dd/MM/yyyy HH:mm}")
+                                .FontSize(9);
+                        });
+
+                    page.Content()
+                        .PaddingVertical(12)
+                        .Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(1.2f); // Nombre
+                                columns.RelativeColumn(1.2f); // Apellidos
+                                columns.RelativeColumn(1.0f); // DNI
+                                columns.RelativeColumn(1.0f); // Fecha
+                                columns.RelativeColumn(0.8f); // Monto
+                                columns.RelativeColumn(1.2f); // Método
+                                columns.RelativeColumn(1.0f); // Estado
+                                columns.RelativeColumn(0.7f); // ID CP
+                            });
+
+                            string[] headers =
+                            {
+                        "Nombre",
+                        "Apellidos",
+                        "DNI",
+                        "Fecha",
+                        "Monto",
+                        "Método",
+                        "Estado",
+                        "ID CP"
+                            };
+
+                            foreach (var header in headers)
+                            {
+                                table.Cell()
+                                    .Element(Header)
+                                    .Text(header)
+                                    .FontSize(9);
+                            }
+
+                            foreach (var row in rows)
+                            {
+                                table.Cell().Padding(4)
+                                    .Text(row.Nombre).FontSize(9);
+
+                                table.Cell().Padding(4)
+                                    .Text(row.Apellidos).FontSize(9);
+
+                                table.Cell().Padding(4)
+                                    .Text(row.Dni).FontSize(9);
+
+                                table.Cell().Padding(4)
+                                    .Text(row.Fecha.ToString("dd/MM/yyyy"))
+                                    .FontSize(9);
+
+                                table.Cell().Padding(4)
+                                    .Text(row.Monto.ToString("0.00"))
+                                    .FontSize(9);
+
+                                table.Cell().Padding(4)
+                                    .Text(row.Metodo).FontSize(9);
+
+                                table.Cell().Padding(4)
+                                    .Text(row.Estado).FontSize(9);
+
+                                table.Cell().Padding(4)
+                                    .Text(row.Id_Comprobante.ToString())
+                                    .FontSize(9);
+                            }
+                        });
+
+                    page.Footer()
+                        .AlignCenter()
+                        .Text(text =>
+                        {
+                            text.Span("Total de comprobantes: ");
+                            text.Span(rows.Count.ToString()).Bold();
+                            text.Span(
+                                $"     |     Generado el {DateTime.Now:dd/MM/yyyy HH:mm}");
+                        });
+                });
+            });
+
+            return document.GeneratePdf();
+        }
+
+
+        public byte[] GenerarHistorialExcel(
+            IReadOnlyCollection<ProyectoSantaMonica_Cesar.Models.HistorialUsuario> rows)
+        {
+            using var workbook = new XLWorkbook();
+            var ws = workbook.Worksheets.Add("Historial Usuarios");
+
+            ws.Cell(1, 1).Value = "CLÍNICA SANTA MÓNICA - HISTORIAL DE USUARIOS";
+            ws.Range(1, 1, 1, 8).Merge();
+            ws.Range(1, 1, 1, 8).Style.Font.SetBold();
+            ws.Range(1, 1, 1, 8).Style.Font.FontSize = 15;
+            ws.Range(1, 1, 1, 8).Style.Alignment.Horizontal =
+                XLAlignmentHorizontalValues.Center;
+
+            ws.Cell(2, 1).Value = $"Fecha de generación: {DateTime.Now:dd/MM/yyyy HH:mm}";
+            ws.Range(2, 1, 2, 8).Merge();
+
+            string[] headers =
+            {
+        "Cod.Hist", "Fecha", "Usuario", "Rol",
+        "Módulo", "Acción", "Descripción", "IP"
+    };
+
+            for (int i = 0; i < headers.Length; i++)
+                ws.Cell(4, i + 1).Value = headers[i];
+
+            int fila = 5;
+
+            foreach (var x in rows)
+            {
+                ws.Cell(fila, 1).Value = x.Id_Historial;
+                ws.Cell(fila, 2).Value = x.Fecha;
+                ws.Cell(fila, 2).Style.DateFormat.Format = "dd/MM/yyyy HH:mm:ss";
+                ws.Cell(fila, 3).Value = x.Usuario?.Username ?? $"Usuario ID {x.Id_Usuario}";
+                ws.Cell(fila, 4).Value = x.Usuario != null ? x.Usuario.Rol.ToString() : "-";
+                ws.Cell(fila, 5).Value = x.Modulo ?? "";
+                ws.Cell(fila, 6).Value = x.Accion ?? "";
+                ws.Cell(fila, 7).Value = x.Descripcion ?? "-";
+                ws.Cell(fila, 8).Value = x.Ip ?? "-";
+                fila++;
+            }
+
+            var encabezado = ws.Range(4, 1, 4, 8);
+            encabezado.Style.Font.SetBold();
+            encabezado.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#203354"));
+            encabezado.Style.Font.SetFontColor(XLColor.White);
+            encabezado.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+            var rango = ws.Range(4, 1, Math.Max(4, fila - 1), 8);
+            rango.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            rango.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+            ws.Columns().AdjustToContents();
+            ws.SheetView.FreezeRows(4);
+            ws.RangeUsed().SetAutoFilter();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
+        }
+
+        public byte[] GenerarHistorialPdf(
+            IReadOnlyCollection<ProyectoSantaMonica_Cesar.Models.HistorialUsuario> rows)
+        {
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(25);
+
+                    page.Header().Column(column =>
+                    {
+                        column.Item()
+                            .Text("CLÍNICA SANTA MÓNICA")
+                            .Bold().FontSize(18).FontColor("203354");
+
+                        column.Item()
+                            .Text("Historial de usuarios")
+                            .Bold().FontSize(14);
+
+                        column.Item()
+                            .Text($"Fecha de generación: {DateTime.Now:dd/MM/yyyy HH:mm}")
+                            .FontSize(9);
+                    });
+
+                    page.Content().PaddingVertical(12).Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(30);
+                            columns.ConstantColumn(95);
+                            columns.RelativeColumn(1.2f);
+                            columns.RelativeColumn(0.9f);
+                            columns.RelativeColumn(0.9f);
+                            columns.RelativeColumn(1.0f);
+                            columns.RelativeColumn(2.0f);
+                            columns.RelativeColumn(1.0f);
+                        });
+
+                        string[] headers =
+                        {
+                    "Cod.Hist", "Fecha", "Usuario", "Rol",
+                    "Módulo", "Acción", "Descripción", "IP"
+                };
+
+                        foreach (var header in headers)
+                        {
+                            table.Cell().Element(Header).Padding(3)
+                                .Text(header).FontSize(8);
+                        }
+
+                        foreach (var x in rows)
+                        {
+                            table.Cell().Padding(3).Text(x.Id_Historial.ToString()).FontSize(7);
+                            table.Cell().Padding(3).Text(x.Fecha.ToString("dd/MM/yyyy HH:mm")).FontSize(7);
+                            table.Cell().Padding(3).Text(x.Usuario?.Username ?? $"Usuario ID {x.Id_Usuario}").FontSize(7);
+                            table.Cell().Padding(3).Text(x.Usuario != null ? x.Usuario.Rol.ToString() : "-").FontSize(7);
+                            table.Cell().Padding(3).Text(x.Modulo ?? "").FontSize(7);
+                            table.Cell().Padding(3).Text(x.Accion ?? "").FontSize(7);
+                            table.Cell().Padding(3).Text(x.Descripcion ?? "-").FontSize(7);
+                            table.Cell().Padding(3).Text(x.Ip ?? "-").FontSize(7);
+                        }
+                    });
+
+                    page.Footer().AlignCenter().Text(text =>
+                    {
+                        text.Span($"Total de registros: {rows.Count}   |   ");
+                        text.Span($"Generado el {DateTime.Now:dd/MM/yyyy HH:mm}");
+                    });
+                });
+            });
+
+            return document.GeneratePdf();
+        }
+
+
     }
 }
 
