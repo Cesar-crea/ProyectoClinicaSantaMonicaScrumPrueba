@@ -1,12 +1,23 @@
 namespace ProyectoSantaMonica_Cesar.Models.ViewModels
 {
+
     public class ReporteFiltrosViewModel
     {
         public DateTime Desde { get; set; } = DateTime.Today.AddDays(-30);
+
         public DateTime Hasta { get; set; } = DateTime.Today;
+
         public int? Id_Medico { get; set; }
+
         public string? Estado { get; set; }
+
         public string? Especialidad { get; set; }
+
+        public string? Buscar { get; set; }
+
+        public int Pagina { get; set; } = 1;
+
+        public int RegistrosPorPagina { get; set; } = 10;
     }
 
     public class ReporteCitaRow

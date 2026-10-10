@@ -19,8 +19,39 @@ namespace ProyectoSantaMonica_Cesar.Controllers
         public ReportesController(IReporteService reportes, IMedicoService medicos, EspecialidadRepository especialidades, IHistorialUsuarioService historial)
         { _reportes=reportes; _medicos=medicos; _especialidades=especialidades; _historial=historial; }
 
-        public async Task<IActionResult> Index()
-        { ViewBag.Medicos=await _medicos.ListarTodosAsync(); ViewBag.Especialidades=(await _especialidades.Listar()).Select(x=>x.Nombre).Where(x=>!string.IsNullOrWhiteSpace(x)).Distinct().OrderBy(x=>x).ToArray(); ViewBag.Estados=new[]{"PENDIENTE","PAGADO","CANCELADO","VENCIDO","ATENDIDO"}; return View(new ReporteFiltrosViewModel()); }
+
+        [HttpGet]
+        public async Task<IActionResult> Index(
+    ReporteFiltrosViewModel filtros)
+        {
+            ViewBag.Medicos =
+                await _medicos.ListarTodosAsync();
+
+            ViewBag.Especialidades =
+                (await _especialidades.Listar())
+                .Select(x => x.Nombre)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .OrderBy(x => x)
+                .ToArray();
+
+            ViewBag.Estados =
+                new[]
+                {
+            "PENDIENTE",
+            "PAGADO",
+            "CANCELADO",
+            "VENCIDO",
+            "ATENDIDO"
+                };
+
+            var rows =
+                await _reportes.ObtenerCitasAsync(filtros);
+
+            ViewBag.Resultados = rows;
+
+            return View(filtros);
+        }
 
         [HttpGet]
         public async Task<IActionResult> CitasPdf(ReporteFiltrosViewModel filtros)

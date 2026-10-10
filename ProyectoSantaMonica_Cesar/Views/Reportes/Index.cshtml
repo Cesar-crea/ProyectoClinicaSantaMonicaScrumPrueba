@@ -1,15 +1,649 @@
 @model ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteFiltrosViewModel
-@{ ViewData["Title"]="Reportes"; Layout=User.IsInRole("ADMINISTRADOR")?"~/Views/Shared/_LayoutAdmin.cshtml":"~/Views/Shared/_LayoutRecepcionista.cshtml"; }
+
+@{
+    ViewData["Title"] = "Reportes";
+
+    Layout = User.IsInRole("ADMINISTRADOR")
+        ? "~/Views/Shared/_LayoutAdmin.cshtml"
+        : "~/Views/Shared/_LayoutRecepcionista.cshtml";
+
+    var resultados =
+        ViewBag.Resultados
+        as IEnumerable<ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteCitaRow>
+        ?? Enumerable.Empty<ProyectoSantaMonica_Cesar.Models.ViewModels.ReporteCitaRow>();
+
+    var totalRegistros = resultados.Count();
+
+    var registrosPorPagina =
+        Model.RegistrosPorPagina <= 0
+            ? 10
+            : Model.RegistrosPorPagina;
+
+    var pagina =
+        Model.Pagina <= 0
+            ? 1
+            : Model.Pagina;
+
+    var totalPaginas =
+        totalRegistros == 0
+            ? 1
+            : (int)Math.Ceiling(
+                totalRegistros / (double)registrosPorPagina
+            );
+
+    if (pagina > totalPaginas)
+    {
+        pagina = totalPaginas;
+    }
+
+    var registrosPagina =
+        resultados
+        .Skip((pagina - 1) * registrosPorPagina)
+        .Take(registrosPorPagina)
+        .ToList();
+}
+
 <div class="container py-4">
- <div class="p-3 mb-4" style="background:#203354;color:white"><h2 class="mb-0">Módulo de Reportes</h2><small>Citas y reportes de gestión</small></div>
- <div class="card shadow-sm mb-4"><div class="card-body"><h5>Reporte de citas</h5><form method="get" class="row g-3" id="formReport">
-  <div class="col-md-3"><label class="form-label">Desde</label><input asp-for="Desde" type="date" class="form-control" required /></div>
-  <div class="col-md-3"><label class="form-label">Hasta</label><input asp-for="Hasta" type="date" class="form-control" required /></div>
-  <div class="col-md-3"><label class="form-label">Médico</label><select asp-for="Id_Medico" class="form-select"><option value="">Todos</option>@foreach(var m in (IEnumerable<ProyectoSantaMonica_Cesar.Models.Medico>)ViewBag.Medicos){<option value="@m.Id_Medico">@m.Nombres @m.Apellidos</option>}</select></div>
-  <div class="col-md-3"><label class="form-label">Especialidad</label><select asp-for="Especialidad" class="form-select"><option value="">Todas</option>@foreach(var e in (string[])ViewBag.Especialidades){<option value="@e">@e</option>}</select></div>
-  <div class="col-md-3"><label class="form-label">Estado</label><select asp-for="Estado" class="form-select"><option value="">Todos</option>@foreach(var e in (string[])ViewBag.Estados){<option value="@e">@e</option>}</select></div>
-  <div class="col-12 d-flex gap-2"><button formaction="/Reportes/CitasPdf" class="btn btn-danger">PDF</button><button formaction="/Reportes/CitasExcel" class="btn btn-success">Excel</button></div>
- </form></div></div>
- @if(User.IsInRole("ADMINISTRADOR")){<div class="card shadow-sm mb-4"><div class="card-body"><h5>Reporte CMP - Administrador</h5><p class="text-muted">Listado de médicos, colegiatura CMP, especialidad y datos de contacto.</p><a class="btn btn-danger me-2" asp-action="CmpPdf">PDF</a><a class="btn btn-success" asp-action="CmpExcel">Excel</a></div></div>
- <div class="card shadow-sm"><div class="card-body"><h5>Historial de usuarios</h5><p class="text-muted">Auditoría de acciones realizadas por usuarios autenticados.</p><a class="btn btn-outline-primary" asp-action="Historial">Consultar historial</a></div></div>}
+
+    <!-- ENCABEZADO -->
+    <div class="p-3 mb-4"
+         style="background:#203354;color:white">
+
+        <h2 class="mb-0">
+            Módulo de Reportes
+        </h2>
+
+        <small>
+            Citas y reportes de gestión
+        </small>
+
+    </div>
+
+
+    <!-- FILTROS -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h5 class="mb-3">
+                <i class="bi bi-funnel"></i>
+                Filtros del reporte
+            </h5>
+
+            <form method="get"
+                  asp-action="Index"
+                  id="formReport">
+
+                <div class="row g-3">
+
+                    <!-- DESDE -->
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Desde
+                        </label>
+
+                        <input asp-for="Desde"
+                               type="date"
+                               class="form-control"
+                               required />
+
+                    </div>
+
+
+                    <!-- HASTA -->
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Hasta
+                        </label>
+
+                        <input asp-for="Hasta"
+                               type="date"
+                               class="form-control"
+                               required />
+
+                    </div>
+
+
+                    <!-- MÉDICO -->
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Médico
+                        </label>
+
+                        <select asp-for="Id_Medico"
+                                class="form-select">
+
+                            <option value="">
+                                Todos
+                            </option>
+
+                            @foreach (
+                            var m in
+                            (IEnumerable<ProyectoSantaMonica_Cesar.Models.Medico>)
+                            ViewBag.Medicos)
+                            {
+                                <option value="@m.Id_Medico">
+                                    @m.Nombres @m.Apellidos
+                                </option>
+                            }
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- ESPECIALIDAD -->
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Especialidad
+                        </label>
+
+                        <select asp-for="Especialidad"
+                                class="form-select">
+
+                            <option value="">
+                                Todas
+                            </option>
+
+                            @foreach (
+                            var e in
+                            (string[])ViewBag.Especialidades)
+                            {
+                                <option value="@e">
+                                    @e
+                                </option>
+                            }
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- ESTADO -->
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+                            Estado
+                        </label>
+
+                        <select asp-for="Estado"
+                                class="form-select">
+
+                            <option value="">
+                                Todos
+                            </option>
+
+                            @foreach (
+                            var e in
+                            (string[])ViewBag.Estados)
+                            {
+                                <option value="@e">
+                                    @e
+                                </option>
+                            }
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- BUSCAR -->
+                    <div class="col-md-5">
+
+                        <label class="form-label">
+                            Buscar
+                        </label>
+
+                        <input asp-for="Buscar"
+                               class="form-control"
+                               placeholder="Paciente, DNI, médico, especialidad, estado o motivo..." />
+
+                    </div>
+
+
+                    <!-- REGISTROS -->
+                    <div class="col-md-2">
+
+                        <label class="form-label">
+                            Registros
+                        </label>
+
+                        <select asp-for="RegistrosPorPagina"
+                                class="form-select">
+
+                            <option value="10">
+                                10
+                            </option>
+
+                            <option value="25">
+                                25
+                            </option>
+
+                            <option value="50">
+                                50
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- BOTONES -->
+                    <div class="col-12 d-flex gap-2">
+
+                        <button type="submit"
+                                class="btn btn-primary">
+
+                            <i class="bi bi-search"></i>
+                            Buscar
+                        </button>
+
+
+                        <a asp-action="Index"
+                           class="btn btn-outline-secondary">
+
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            Limpiar
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- RESULTADOS -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between
+                        align-items-center mb-3">
+
+                <div>
+
+                    <h5 class="mb-1">
+                        Vista previa del reporte
+                    </h5>
+
+                    <span class="text-muted">
+
+                        Se encontraron
+                        <strong>
+                            @totalRegistros
+                        </strong>
+                        citas.
+
+                    </span>
+
+                </div>
+
+
+                @if (totalRegistros > 0)
+                {
+                    <div class="d-flex gap-2">
+
+                        <form method="get"
+                              asp-action="CitasPdf"
+                              class="d-inline">
+
+                            <input type="hidden"
+                                   name="Desde"
+                                   value="@Model.Desde.ToString("yyyy-MM-dd")" />
+
+                            <input type="hidden"
+                                   name="Hasta"
+                                   value="@Model.Hasta.ToString("yyyy-MM-dd")" />
+
+                            <input type="hidden"
+                                   name="Id_Medico"
+                                   value="@Model.Id_Medico" />
+
+                            <input type="hidden"
+                                   name="Especialidad"
+                                   value="@Model.Especialidad" />
+
+                            <input type="hidden"
+                                   name="Estado"
+                                   value="@Model.Estado" />
+
+                            <input type="hidden"
+                                   name="Buscar"
+                                   value="@Model.Buscar" />
+
+                            <button type="submit"
+                                    class="btn btn-danger">
+
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                PDF
+
+                            </button>
+
+                        </form>
+
+
+                        <form method="get"
+                              asp-action="CitasExcel"
+                              class="d-inline">
+
+                            <input type="hidden"
+                                   name="Desde"
+                                   value="@Model.Desde.ToString("yyyy-MM-dd")" />
+
+                            <input type="hidden"
+                                   name="Hasta"
+                                   value="@Model.Hasta.ToString("yyyy-MM-dd")" />
+
+                            <input type="hidden"
+                                   name="Id_Medico"
+                                   value="@Model.Id_Medico" />
+
+                            <input type="hidden"
+                                   name="Especialidad"
+                                   value="@Model.Especialidad" />
+
+                            <input type="hidden"
+                                   name="Estado"
+                                   value="@Model.Estado" />
+
+                            <input type="hidden"
+                                   name="Buscar"
+                                   value="@Model.Buscar" />
+
+                            <button type="submit"
+                                    class="btn btn-success">
+
+                                <i class="bi bi-file-earmark-excel"></i>
+                                Excel
+
+                            </button>
+
+                        </form>
+
+                    </div>
+                }
+
+            </div>
+
+
+            @if (registrosPagina.Any())
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-hover
+                                  table-bordered align-middle">
+
+                        <thead class="table-dark">
+
+                            <tr>
+
+                                <th>Cod. Cita</th>
+
+                                <th>Paciente</th>
+
+                                <th>DNI</th>
+
+                                <th>Médico</th>
+
+                                <th>Especialidad</th>
+
+                                <th>Fecha</th>
+
+                                <th>Hora</th>
+
+                                <th>Estado</th>
+
+                                <th>Motivo</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var row in registrosPagina)
+                            {
+                                <tr>
+
+                                    <td>
+                                        @row.Id_Cita
+                                    </td>
+
+                                    <td>
+                                        @row.Paciente
+                                    </td>
+
+                                    <td>
+                                        @row.Dni
+                                    </td>
+
+                                    <td>
+                                        @row.Medico
+                                    </td>
+
+                                    <td>
+                                        @row.Especialidad
+                                    </td>
+
+                                    <td>
+                                        @row.Fecha.ToString("dd/MM/yyyy")
+                                    </td>
+
+                                    <td>
+                                        @row.Hora.ToString(@"hh\:mm")
+                                    </td>
+
+                                    <td>
+
+                                        @{
+                                            var claseEstado =
+                                            row.Estado switch
+                                            {
+                                                "PENDIENTE" =>
+                                                            "bg-warning text-dark",
+
+                                                "PAGADO" =>
+                                                            "bg-success",
+
+                                                "CANCELADO" =>
+                                                            "bg-danger",
+
+                                                "VENCIDO" =>
+                                                            "bg-secondary",
+
+                                                "ATENDIDO" =>
+                                                            "bg-info text-dark",
+
+                                                _ =>
+                                                            "bg-secondary"
+                                            };
+                                        }
+
+                                        <span class="badge @claseEstado">
+                                            @row.Estado
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+                                        @row.Motivo
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- PAGINACIÓN -->
+                @if (totalPaginas > 1)
+                {
+                    <nav class="mt-3">
+
+                        <ul class="pagination
+                                   justify-content-center">
+
+                            <!-- ANTERIOR -->
+                            <li class="page-item
+                                @(pagina <= 1 ? "disabled" : "")">
+
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-Desde="@Model.Desde.ToString("yyyy-MM-dd")"
+                                   asp-route-Hasta="@Model.Hasta.ToString("yyyy-MM-dd")"
+                                   asp-route-Id_Medico="@Model.Id_Medico"
+                                   asp-route-Especialidad="@Model.Especialidad"
+                                   asp-route-Estado="@Model.Estado"
+                                   asp-route-Buscar="@Model.Buscar"
+                                   asp-route-RegistrosPorPagina="@registrosPorPagina"
+                                   asp-route-Pagina="@(pagina - 1)">
+
+                                    Anterior
+
+                                </a>
+
+                            </li>
+
+
+                            @for (int i = 1; i <= totalPaginas; i++)
+                            {
+                                <li class="page-item
+                                    @(i == pagina ? "active" : "")">
+
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-Desde="@Model.Desde.ToString("yyyy-MM-dd")"
+                                       asp-route-Hasta="@Model.Hasta.ToString("yyyy-MM-dd")"
+                                       asp-route-Id_Medico="@Model.Id_Medico"
+                                       asp-route-Especialidad="@Model.Especialidad"
+                                       asp-route-Estado="@Model.Estado"
+                                       asp-route-Buscar="@Model.Buscar"
+                                       asp-route-RegistrosPorPagina="@registrosPorPagina"
+                                       asp-route-Pagina="@i">
+
+                                        @i
+
+                                    </a>
+
+                                </li>
+                            }
+
+
+                            <!-- SIGUIENTE -->
+                            <li class="page-item
+                                @(pagina >= totalPaginas ? "disabled" : "")">
+
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-Desde="@Model.Desde.ToString("yyyy-MM-dd")"
+                                   asp-route-Hasta="@Model.Hasta.ToString("yyyy-MM-dd")"
+                                   asp-route-Id_Medico="@Model.Id_Medico"
+                                   asp-route-Especialidad="@Model.Especialidad"
+                                   asp-route-Estado="@Model.Estado"
+                                   asp-route-Buscar="@Model.Buscar"
+                                   asp-route-RegistrosPorPagina="@registrosPorPagina"
+                                   asp-route-Pagina="@(pagina + 1)">
+
+                                    Siguiente
+
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                    </nav>
+                }
+
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">
+
+                    <i class="bi bi-info-circle"></i>
+
+                    No se encontraron citas con los filtros
+                    seleccionados.
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+
+    <!-- REPORTES ADMINISTRADOR -->
+    @if (User.IsInRole("ADMINISTRADOR"))
+    {
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <h5>
+                    Reporte CMP - Administrador
+                </h5>
+
+                <p class="text-muted">
+                    Listado de médicos, colegiatura CMP,
+                    especialidad y datos de contacto.
+                </p>
+
+                <a class="btn btn-danger me-2"
+                   asp-action="CmpPdf">
+
+                    PDF
+
+                </a>
+
+                <a class="btn btn-success"
+                   asp-action="CmpExcel">
+
+                    Excel
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h5>
+                    Historial de usuarios
+                </h5>
+
+                <p class="text-muted">
+                    Auditoría de acciones realizadas
+                    por usuarios autenticados.
+                </p>
+
+                <a class="btn btn-outline-primary"
+                   asp-action="Historial">
+
+                    Consultar historial
+
+                </a>
+
+            </div>
+
+        </div>
+    }
+
 </div>
